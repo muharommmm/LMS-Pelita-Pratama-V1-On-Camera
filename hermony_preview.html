@@ -1,0 +1,955 @@
+<!DOCTYPE html>
+<html class="light" lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>Hermony Learning System - Student Interactive Mockup</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700&amp;family=Inter:wght@400;500;600&amp;display=swap"
+        rel="stylesheet" />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+        rel="stylesheet" />
+    <script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "primary": "#334779", // Midnight Navy
+                        "secondary": "#855300", // Golden Ochre
+                        "background": "#f7f9fb", // Neutral-50
+                        "surface": "#ffffff",
+                        "outline-variant": "#e0e3e5",
+                        "on-background": "#191c1e",
+                        "on-surface": "#191c1e",
+                        "on-primary": "#ffffff",
+                        "primary-container": "#dae2ff",
+                        "on-primary-container": "#001847",
+                        "on-surface-variant": "#464555",
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem", // 8px for buttons/inputs
+                        "xl": "1rem",   // 16px for cards
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "gutter": "1.5rem",
+                        "container-padding-desktop": "2.5rem",
+                        "stack-sm": "0.5rem",
+                        "base-unit": "8px",
+                        "container-padding-mobile": "1rem",
+                        "stack-md": "1.5rem",
+                        "stack-lg": "3rem"
+                    },
+                    "fontFamily": {
+                        "headline": ["Plus Jakarta Sans"],
+                        "body": ["Inter"],
+                    },
+                    "boxShadow": {
+                        "lumina": "0px 4px 20px rgba(0,0,0,0.05)"
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        .lumina-card {
+            background-color: #ffffff;
+            border: 1px solid #e0e3e5;
+            box-shadow: 0px 4px 20px rgba(0, 0, 0, 0.05);
+            border-radius: 1rem;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .lumina-card-hover:hover {
+            transform: translateY(-4px);
+            box-shadow: 0px 8px 30px rgba(0, 0, 0, 0.08);
+        }
+
+        .header-bg {
+            background-color: #334779;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .header-pattern {
+            position: absolute;
+            top: 0;
+            right: 0;
+            bottom: 0;
+            left: 0;
+            opacity: 0.05;
+            background-image: radial-gradient(#ffffff 1px, transparent 1px);
+            background-size: 24px 24px;
+        }
+    </style>
+</head>
+
+<body
+    class="bg-background text-on-background min-h-screen font-body selection:bg-primary-container selection:text-on-primary-container">
+
+    <!-- Top Navigation (Desktop) -->
+    <header
+        class="hidden md:flex justify-between items-center w-full px-container-padding-desktop max-w-[1280px] mx-auto h-16 bg-surface border-b border-outline-variant sticky top-0 z-40">
+        <div class="font-headline text-xl font-bold text-primary flex items-center gap-2">
+            <span class="material-symbols-outlined text-3xl text-secondary">analytics</span>
+            Garuda CBT <span class="text-xs py-1 px-2 rounded-full bg-primary-container text-primary font-bold">Hermony
+                UI</span>
+        </div>
+        <nav class="flex items-center gap-8">
+            <button onclick="switchTab('home')"
+                class="tab-btn active-tab text-primary border-b-2 border-primary pb-1 font-semibold text-sm">Dashboard</button>
+            <button onclick="switchTab('materi')"
+                class="tab-btn text-on-surface-variant hover:text-primary transition-colors text-sm font-medium">Materi</button>
+            <button onclick="switchTab('tugas')"
+                class="tab-btn text-on-surface-variant hover:text-primary transition-colors text-sm font-medium">Tugas</button>
+            <button onclick="switchTab('chat')"
+                class="tab-btn text-on-surface-variant hover:text-primary transition-colors text-sm font-medium">Obrolan</button>
+        </nav>
+        <div class="flex items-center gap-4 text-primary">
+            <div class="text-right hidden sm:block">
+                <p class="text-xs text-on-surface-variant font-semibold">Tahun Pelajaran: 2026/2027</p>
+                <p class="text-[10px] text-secondary font-bold">Semester Ganjil</p>
+            </div>
+            <button class="hover:bg-background p-2 rounded-full transition-colors relative">
+                <span class="material-symbols-outlined">notifications</span>
+                <span class="absolute top-1.5 right-1.5 w-2 bg-red-500 rounded-full h-2"></span>
+            </button>
+            <button onclick="switchTab('chat')" class="hover:bg-background p-2 rounded-full transition-colors"><span
+                    class="material-symbols-outlined">account_circle</span></button>
+        </div>
+    </header>
+
+    <div class="flex max-w-[1280px] mx-auto w-full">
+        <!-- Side Navigation (Desktop) -->
+        <aside
+            class="hidden lg:flex flex-col h-[calc(100vh-4rem)] sticky top-16 w-[240px] bg-surface border-r border-outline-variant p-4 gap-2 z-30">
+            <button onclick="switchTab('home')" id="side-home"
+                class="sidebar-btn flex items-center gap-3 w-full bg-primary text-white rounded-lg px-4 py-2.5 text-sm font-semibold transition-all">
+                <span class="material-symbols-outlined">home</span> Home
+            </button>
+            <button onclick="switchTab('materi')" id="side-materi"
+                class="sidebar-btn flex items-center gap-3 w-full text-on-surface-variant px-4 py-2.5 hover:bg-background rounded-lg text-sm font-medium transition-all">
+                <span class="material-symbols-outlined">school</span> Materi
+            </button>
+            <button onclick="switchTab('tugas')" id="side-tugas"
+                class="sidebar-btn flex items-center gap-3 w-full text-on-surface-variant px-4 py-2.5 hover:bg-background rounded-lg text-sm font-medium transition-all">
+                <span class="material-symbols-outlined">assignment</span> Tugas
+            </button>
+            <button onclick="switchTab('cbt')" id="side-cbt"
+                class="sidebar-btn flex items-center gap-3 w-full text-on-surface-variant px-4 py-2.5 hover:bg-background rounded-lg text-sm font-medium transition-all">
+                <span class="material-symbols-outlined">quiz</span> Ujian / CBT
+            </button>
+            <button onclick="switchTab('absensi')" id="side-absensi"
+                class="sidebar-btn flex items-center gap-3 w-full text-on-surface-variant px-4 py-2.5 hover:bg-background rounded-lg text-sm font-medium transition-all">
+                <span class="material-symbols-outlined">person_check</span> Absensi
+                </a>
+                <button onclick="switchTab('nilai')" id="side-nilai"
+                    class="sidebar-btn flex items-center gap-3 w-full text-on-surface-variant px-4 py-2.5 hover:bg-background rounded-lg text-sm font-medium transition-all">
+                    <span class="material-symbols-outlined">verified</span> Nilai Hasil
+                </button>
+                <button onclick="switchTab('spp')" id="side-spp"
+                    class="sidebar-btn flex items-center gap-3 w-full text-on-surface-variant px-4 py-2.5 hover:bg-background rounded-lg text-sm font-medium transition-all">
+                    <span class="material-symbols-outlined">payments</span> SPP
+                </button>
+                <button onclick="switchTab('catatan')" id="side-catatan"
+                    class="sidebar-btn flex items-center gap-3 w-full text-on-surface-variant px-4 py-2.5 hover:bg-background rounded-lg text-sm font-medium transition-all">
+                    <span class="material-symbols-outlined">rate_review</span> Catatan Guru
+                </button>
+
+                <div class="mt-auto pt-4 border-t border-outline-variant flex flex-col gap-2">
+                    <button onclick="switchTab('chat')" id="side-chat"
+                        class="sidebar-btn flex items-center gap-3 w-full text-on-surface-variant px-4 py-2.5 hover:bg-background rounded-lg text-sm font-medium transition-all">
+                        <span class="material-symbols-outlined">chat</span> Chat
+                    </button>
+                    <a class="flex items-center gap-3 text-red-600 px-4 py-2.5 hover:bg-red-50 rounded-lg text-sm font-medium transition-all"
+                        href="#">
+                        <span class="material-symbols-outlined">logout</span> Logout
+                    </a>
+                </div>
+        </aside>
+
+        <!-- Main Content Canvas -->
+        <main
+            class="flex-1 p-container-padding-mobile md:p-container-padding-desktop pb-24 lg:pb-container-padding-desktop">
+            <div class="max-w-4xl mx-auto space-y-8">
+
+                <!-- TAB CONTAINER: HOME -->
+                <div id="tab-home" class="tab-content space-y-8">
+                    <!-- 1. Greeting Card (Top) -->
+                    <section
+                        class="header-bg rounded-xl p-8 text-on-primary shadow-lumina relative flex flex-col md:flex-row items-center gap-8">
+                        <div class="header-pattern"></div>
+                        <div
+                            class="relative z-10 w-24 h-24 md:w-32 md:h-32 rounded-full border-4 border-white/20 overflow-hidden flex-shrink-0">
+                            <img alt="Profile Picture" class="w-full h-full object-cover"
+                                src="https://lh3.googleusercontent.com/aida-public/AB6AXuC9ptsdtw3WS-WOvjoneceQ4ZkhrgvmE3P1a3SeX9LHf0sQWYuo6sgJkam7wHDWSkwuzomMTiLo5TwsapHldizxURvlfhNgXKmUrThHEAXUlNqWTafYdySlrzXj-TxpW8ROJ0IvvaEk1yjwc4fufb1uiCuO9pQziXEs4VG-mAPTAp4FqcjmLhRgCXiaWuLVXICwjVLuzQVj-OuNqV69dVN9DRo0bWULq1t8cOP3SP3mbYGpV_fBWjcJGg" />
+                        </div>
+                        <div class="relative z-10 text-center md:text-left space-y-1">
+                            <h1 class="font-headline text-2xl md:text-3xl font-bold">Halo, Agung Januar Ismail</h1>
+                            <div class="flex flex-col md:flex-row items-center gap-2 md:gap-4 text-white/80 text-sm">
+                                <span class="flex items-center gap-1.5"><span
+                                        class="material-symbols-outlined text-[18px]">badge</span> NIS:
+                                    00574717598</span>
+                                <span class="hidden md:inline text-white/40">•</span>
+                                <span class="flex items-center gap-1.5"><span
+                                        class="material-symbols-outlined text-[18px]">school</span> Kelas: XII RPL
+                                    1</span>
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- Jadwal Kelas Hari Ini -->
+                    <section class="lumina-card border-l-[6px] border-l-secondary overflow-hidden">
+                        <div class="p-5 border-b border-outline-variant flex justify-between items-center">
+                            <h3
+                                class="font-headline text-sm font-bold text-secondary flex items-center gap-2 tracking-wide uppercase">
+                                <span class="material-symbols-outlined text-xl">calendar_today</span> Jadwal
+                                Pembelajaran Hari Ini
+                            </h3>
+                            <span class="text-xs text-on-surface-variant font-medium">Senin, 06 Juli 2026</span>
+                        </div>
+                        <div class="p-5">
+                            <div class="overflow-x-auto">
+                                <table class="w-full text-left text-sm border-collapse">
+                                    <thead>
+                                        <tr class="border-b border-outline-variant text-on-surface-variant">
+                                            <th class="pb-3 font-semibold">Waktu</th>
+                                            <th class="pb-3 font-semibold">Mata Pelajaran</th>
+                                            <th class="pb-3 font-semibold">Guru</th>
+                                            <th class="pb-3 font-semibold text-right">Aksi / Status</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody class="divide-y divide-outline-variant">
+                                        <tr class="hover:bg-background transition-colors">
+                                            <td class="py-3 font-bold text-primary">07:30 - 09:00</td>
+                                            <td class="py-3 text-on-surface font-semibold">Rekayasa Perangkat Lunak
+                                                (Teori)</td>
+                                            <td class="py-3 text-on-surface-variant">Budi Santoso, S.Kom.</td>
+                                            <td class="py-3 text-right">
+                                                <a href="#"
+                                                    class="inline-flex items-center gap-1 bg-teal-600 hover:bg-teal-700 text-white px-3 py-1 rounded text-xs font-semibold transition-colors">
+                                                    <span
+                                                        class="material-symbols-outlined text-[14px]">open_in_new</span>
+                                                    Masuk Kelas
+                                                </a>
+                                            </td>
+                                        </tr>
+                                        <tr class="hover:bg-background transition-colors">
+                                            <td class="py-3 font-bold text-primary">09:00 - 10:30</td>
+                                            <td class="py-3 text-on-surface font-semibold">Matematika Wajib</td>
+                                            <td class="py-3 text-on-surface-variant">Dra. Sri Wahyuni</td>
+                                            <td class="py-3 text-right">
+                                                <span
+                                                    class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-amber-50 text-amber-800 border border-amber-200">
+                                                    📝 Tugas Mandiri
+                                                </span>
+                                            </td>
+                                        </tr>
+                                        <tr class="hover:bg-background transition-colors">
+                                            <td class="py-3 font-bold text-primary">10:30 - 12:00</td>
+                                            <td class="py-3 text-on-surface font-semibold">Bahasa Inggris</td>
+                                            <td class="py-3 text-on-surface-variant">Mr. George Collins</td>
+                                            <td class="py-3 text-right">
+                                                <span
+                                                    class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-gray-100 text-gray-800 border border-gray-200">
+                                                    🏢 Kelas Offline
+                                                </span>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- 2. Announcements & Agenda (Middle) -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-gutter">
+                        <!-- PENGUMUMAN -->
+                        <section class="lumina-card border-l-[6px] border-l-primary overflow-hidden">
+                            <div class="p-5 border-b border-outline-variant">
+                                <h3
+                                    class="font-headline text-sm font-bold text-primary flex items-center gap-2 tracking-wide uppercase">
+                                    <span class="material-symbols-outlined text-xl">campaign</span> Pengumuman
+                                </h3>
+                            </div>
+                            <div class="p-5 space-y-4">
+                                <div class="border-b border-outline-variant pb-3 last:border-0 last:pb-0 space-y-1">
+                                    <p class="text-sm font-semibold text-on-surface">Jadwal Ujian Akhir Semester Genap
+                                        2026</p>
+                                    <div class="flex items-center justify-between text-xs text-on-surface-variant">
+                                        <span>Oleh: Kurikulum</span>
+                                        <span>05 Jul 2026</span>
+                                    </div>
+                                </div>
+                                <div class="border-b border-outline-variant pb-3 last:border-0 last:pb-0 space-y-1">
+                                    <p class="text-sm font-semibold text-on-surface">Workshop Coding Bootcamp & AI Tools
+                                    </p>
+                                    <div class="flex items-center justify-between text-xs text-on-surface-variant">
+                                        <span>Oleh: Pembina OSIS</span>
+                                        <span>01 Jul 2026</span>
+                                    </div>
+                                </div>
+                                <div class="border-b border-outline-variant pb-3 last:border-0 last:pb-0 space-y-1">
+                                    <p class="text-sm font-semibold text-on-surface">Pengingat Tagihan SPP Terlambat</p>
+                                    <div class="flex items-center justify-between text-xs text-on-surface-variant">
+                                        <span>Oleh: Admin Keuangan</span>
+                                        <span>28 Jun 2026</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </section>
+
+                        <!-- AGENDA TERDEKAT -->
+                        <section class="lumina-card border-l-[6px] border-l-primary overflow-hidden">
+                            <div class="p-5 border-b border-outline-variant">
+                                <h3
+                                    class="font-headline text-sm font-bold text-primary flex items-center gap-2 tracking-wide uppercase">
+                                    <span class="material-symbols-outlined text-xl">event</span> Agenda Terdekat
+                                </h3>
+                            </div>
+                            <div class="p-5 space-y-4">
+                                <div class="flex items-start gap-3">
+                                    <div class="w-2 h-2 rounded-full bg-secondary mt-1.5 flex-shrink-0"></div>
+                                    <div>
+                                        <p class="text-sm font-medium text-on-surface">Presentasi Project Akhir Kelompok
+                                        </p>
+                                        <span class="text-xs text-on-surface-variant">10 Juli 2026 • 08:00 -
+                                            Selesai</span>
+                                    </div>
+                                </div>
+                                <div class="flex items-start gap-3">
+                                    <div class="w-2 h-2 rounded-full bg-primary mt-1.5 flex-shrink-0"></div>
+                                    <div>
+                                        <p class="text-sm font-medium text-on-surface">Ujian Praktek Database Relasional
+                                        </p>
+                                        <span class="text-xs text-on-surface-variant">15 Juli 2026 • 09:00 -
+                                            11:30</span>
+                                    </div>
+                                </div>
+                                <div class="flex items-start gap-3">
+                                    <div class="w-2 h-2 rounded-full bg-red-500 mt-1.5 flex-shrink-0"></div>
+                                    <div>
+                                        <p class="text-sm font-medium text-on-surface">Batas Pengumpulan Portofolio
+                                            Magang</p>
+                                        <span class="text-xs text-red-600 font-semibold">20 Juli 2026 • 23:59</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </section>
+                    </div>
+                </div>
+
+                <!-- TAB CONTAINER: MATERI -->
+                <div id="tab-materi" class="tab-content hidden space-y-6">
+                    <div class="flex justify-between items-center">
+                        <div>
+                            <h2 class="text-2xl font-bold font-headline text-primary">Materi Pembelajaran</h2>
+                            <p class="text-xs text-on-surface-variant mt-1">Daftar buku dan modul ajar aktif untuk
+                                semester ini.</p>
+                        </div>
+                        <span class="text-xs bg-primary/10 text-primary font-bold px-3 py-1.5 rounded-full">4 Materi
+                            Aktif</span>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <!-- Card 1 -->
+                        <div class="lumina-card p-5 space-y-4">
+                            <div class="flex justify-between items-start">
+                                <span
+                                    class="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-blue-50 text-blue-800 border border-blue-200">Produktif
+                                    RPL</span>
+                                <span class="text-xs text-on-surface-variant">Diperbarui kemarin</span>
+                            </div>
+                            <h4 class="font-headline font-bold text-lg text-primary">Pemrograman Web Dinamis PHP
+                                (Laravel Framework)</h4>
+                            <div class="flex items-center gap-2 text-xs text-on-surface-variant">
+                                <span class="material-symbols-outlined text-[16px]">person</span>
+                                <span>Budi Santoso, S.Kom.</span>
+                            </div>
+                            <div class="space-y-1">
+                                <div class="flex justify-between text-xs font-bold text-on-surface">
+                                    <span>Progress Belajar</span>
+                                    <span>75%</span>
+                                </div>
+                                <div class="w-full bg-background rounded-full h-2">
+                                    <div class="bg-secondary h-2 rounded-full" style="width: 75%"></div>
+                                </div>
+                            </div>
+                            <button
+                                class="w-full py-2 bg-primary hover:bg-primary/90 text-white font-semibold text-xs rounded-lg transition-colors">Buka
+                                Materi</button>
+                        </div>
+                        <!-- Card 2 -->
+                        <div class="lumina-card p-5 space-y-4">
+                            <div class="flex justify-between items-start">
+                                <span
+                                    class="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-purple-50 text-purple-800 border border-purple-200">Umum</span>
+                                <span class="text-xs text-on-surface-variant">Diperbarui 3 hari lalu</span>
+                            </div>
+                            <h4 class="font-headline font-bold text-lg text-primary">Matematika Diskrit & Logika
+                                Informatika</h4>
+                            <div class="flex items-center gap-2 text-xs text-on-surface-variant">
+                                <span class="material-symbols-outlined text-[16px]">person</span>
+                                <span>Dra. Sri Wahyuni</span>
+                            </div>
+                            <div class="space-y-1">
+                                <div class="flex justify-between text-xs font-bold text-on-surface">
+                                    <span>Progress Belajar</span>
+                                    <span>40%</span>
+                                </div>
+                                <div class="w-full bg-background rounded-full h-2">
+                                    <div class="bg-secondary h-2 rounded-full" style="width: 40%"></div>
+                                </div>
+                            </div>
+                            <button
+                                class="w-full py-2 bg-primary hover:bg-primary/90 text-white font-semibold text-xs rounded-lg transition-colors">Buka
+                                Materi</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- TAB CONTAINER: TUGAS -->
+                <div id="tab-tugas" class="tab-content hidden space-y-6">
+                    <div class="flex justify-between items-center">
+                        <div>
+                            <h2 class="text-2xl font-bold font-headline text-primary">Daftar Tugas Mandiri</h2>
+                            <p class="text-xs text-on-surface-variant mt-1">Selesaikan tugas sebelum batas waktu
+                                berakhir untuk menghindari pengurangan nilai.</p>
+                        </div>
+                        <span
+                            class="text-xs bg-red-50 text-red-700 border border-red-200 font-bold px-3 py-1.5 rounded-full flex items-center gap-1">
+                            <span class="material-symbols-outlined text-[16px]">warning</span> 1 Tugas Mendesak
+                        </span>
+                    </div>
+
+                    <div class="space-y-4">
+                        <!-- Urgent Assignment -->
+                        <div
+                            class="lumina-card p-5 border-l-[6px] border-l-red-500 flex flex-col md:flex-row md:items-center justify-between gap-4">
+                            <div class="space-y-1.5">
+                                <div class="flex items-center gap-2">
+                                    <span
+                                        class="px-2 py-0.5 rounded bg-red-50 border border-red-200 text-[10px] font-bold text-red-700">MENDESAK</span>
+                                    <span class="text-xs text-on-surface-variant">Matematika Wajib</span>
+                                </div>
+                                <h4 class="font-headline font-bold text-base text-primary">Latihan Soal Peluang &
+                                    Statistika Kelas 12</h4>
+                                <p class="text-xs text-red-600 font-semibold flex items-center gap-1">
+                                    <span class="material-symbols-outlined text-[16px]">alarm</span> Batas Pengumpulan:
+                                    Besok, 07 Juli 2026 - 12:00 WIB
+                                </p>
+                            </div>
+                            <button
+                                class="px-5 py-2.5 bg-primary hover:bg-primary/90 text-white text-xs font-bold rounded-lg transition-colors self-start md:self-center">Kerjakan
+                                Tugas</button>
+                        </div>
+
+                        <!-- Completed Assignment -->
+                        <div
+                            class="lumina-card p-5 border-l-[6px] border-l-green-500 flex flex-col md:flex-row md:items-center justify-between gap-4">
+                            <div class="space-y-1.5">
+                                <div class="flex items-center gap-2">
+                                    <span
+                                        class="px-2 py-0.5 rounded bg-green-50 border border-green-200 text-[10px] font-bold text-green-700">SELESAI</span>
+                                    <span class="text-xs text-on-surface-variant">Rekayasa Perangkat Lunak</span>
+                                </div>
+                                <h4 class="font-headline font-semibold text-base text-primary">Membuat Landing Page
+                                    Responsif dengan Tailwind CSS</h4>
+                                <p class="text-xs text-green-600 font-semibold flex items-center gap-1">
+                                    <span class="material-symbols-outlined text-[16px]">check_circle</span> Diserahkan
+                                    pada 04 Juli 2026 • Nilai: 95/100
+                                </p>
+                            </div>
+                            <button
+                                class="px-5 py-2.5 bg-background hover:bg-outline-variant text-on-surface text-xs font-semibold rounded-lg transition-colors border border-outline-variant self-start md:self-center">Lihat
+                                Detail</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- TAB CONTAINER: CBT (UJIAN) -->
+                <div id="tab-cbt" class="tab-content hidden space-y-6">
+                    <div>
+                        <h2 class="text-2xl font-bold font-headline text-primary">Computer Based Test (CBT)</h2>
+                        <p class="text-xs text-on-surface-variant mt-1">Harap siapkan Token Ujian dari Pengawas sebelum
+                            memulai ujian aktif.</p>
+                    </div>
+
+                    <div class="lumina-card overflow-hidden">
+                        <div class="bg-primary/5 p-4 border-b border-outline-variant flex justify-between items-center">
+                            <span class="text-xs font-bold text-primary flex items-center gap-1.5">
+                                <span class="material-symbols-outlined text-lg">science</span> Tryout Bersama UTBK 2026
+                            </span>
+                            <span
+                                class="text-xs bg-teal-50 border border-teal-200 text-teal-800 font-bold px-2 py-0.5 rounded">AKTIF</span>
+                        </div>
+                        <div class="p-5 space-y-6">
+                            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
+                                <div class="p-3 bg-background rounded-lg">
+                                    <span class="text-[10px] text-on-surface-variant uppercase font-bold">Durasi</span>
+                                    <p class="text-sm font-bold text-primary mt-1">120 Menit</p>
+                                </div>
+                                <div class="p-3 bg-background rounded-lg">
+                                    <span class="text-[10px] text-on-surface-variant uppercase font-bold">Jumlah
+                                        Soal</span>
+                                    <p class="text-sm font-bold text-primary mt-1">45 Butir</p>
+                                </div>
+                                <div class="p-3 bg-background rounded-lg">
+                                    <span class="text-[10px] text-on-surface-variant uppercase font-bold">Jenis</span>
+                                    <p class="text-sm font-bold text-primary mt-1">Pilihan Ganda</p>
+                                </div>
+                                <div class="p-3 bg-background rounded-lg">
+                                    <span class="text-[10px] text-on-surface-variant uppercase font-bold">KKM</span>
+                                    <p class="text-sm font-bold text-primary mt-1">75.0</p>
+                                </div>
+                            </div>
+
+                            <div class="border-t border-outline-variant pt-5 space-y-4 max-w-sm mx-auto">
+                                <div class="space-y-1 text-center">
+                                    <label class="text-xs font-bold text-on-surface">Masukkan Token Ujian</label>
+                                    <input type="text" placeholder="CONTOH: ABX190"
+                                        class="w-full text-center px-4 py-2 border border-outline-variant rounded-lg font-bold tracking-widest text-primary focus:outline-none focus:border-primary uppercase" />
+                                </div>
+                                <button
+                                    class="w-full py-3 bg-secondary hover:bg-secondary/90 text-white font-bold text-sm rounded-lg transition-colors shadow-lumina flex items-center justify-center gap-2">
+                                    <span class="material-symbols-outlined">play_arrow</span> MULAI UJIAN SEKARANG
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- TAB CONTAINER: ABSENSI -->
+                <div id="tab-absensi" class="tab-content hidden space-y-6">
+                    <div>
+                        <h2 class="text-2xl font-bold font-headline text-primary">Rekapitulasi Kehadiran</h2>
+                        <p class="text-xs text-on-surface-variant mt-1">Grafik persentase absensi dan log data harian
+                            bulan berjalan.</p>
+                    </div>
+
+                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                        <div class="lumina-card p-4 text-center">
+                            <span class="text-[10px] text-green-700 font-bold uppercase">Hadir (H)</span>
+                            <p class="text-3xl font-bold text-primary mt-2">18 Hari</p>
+                        </div>
+                        <div class="lumina-card p-4 text-center">
+                            <span class="text-[10px] text-blue-600 font-bold uppercase">Sakit (S)</span>
+                            <p class="text-3xl font-bold text-primary mt-2">1 Hari</p>
+                        </div>
+                        <div class="lumina-card p-4 text-center">
+                            <span class="text-[10px] text-amber-600 font-bold uppercase">Izin (I)</span>
+                            <p class="text-3xl font-bold text-primary mt-2">0 Hari</p>
+                        </div>
+                        <div class="lumina-card p-4 text-center">
+                            <span class="text-[10px] text-red-600 font-bold uppercase">Tanpa Keterangan</span>
+                            <p class="text-3xl font-bold text-primary mt-2">0 Hari</p>
+                        </div>
+                    </div>
+
+                    <div class="lumina-card p-5">
+                        <h4 class="font-headline font-bold text-sm text-primary mb-4">Log Kehadiran Bulan Ini (Juli
+                            2026)</h4>
+                        <div class="space-y-3">
+                            <div
+                                class="flex justify-between items-center py-2 border-b border-outline-variant last:border-0">
+                                <div>
+                                    <p class="text-sm font-semibold text-on-surface">Senin, 06 Juli 2026</p>
+                                    <span class="text-xs text-on-surface-variant">Absensi Online - Materi Kbm</span>
+                                </div>
+                                <span
+                                    class="px-2.5 py-0.5 rounded bg-green-50 border border-green-200 text-xs font-bold text-green-700">HADIR</span>
+                            </div>
+                            <div
+                                class="flex justify-between items-center py-2 border-b border-outline-variant last:border-0">
+                                <div>
+                                    <p class="text-sm font-semibold text-on-surface">Jumat, 03 Juli 2026</p>
+                                    <span class="text-xs text-on-surface-variant">Absensi Offline Kelas</span>
+                                </div>
+                                <span
+                                    class="px-2.5 py-0.5 rounded bg-green-50 border border-green-200 text-xs font-bold text-green-700">HADIR</span>
+                            </div>
+                            <div
+                                class="flex justify-between items-center py-2 border-b border-outline-variant last:border-0">
+                                <div>
+                                    <p class="text-sm font-semibold text-on-surface">Kamis, 02 Juli 2026</p>
+                                    <span class="text-xs text-on-surface-variant">Surat Dokter Terlampir</span>
+                                </div>
+                                <span
+                                    class="px-2.5 py-0.5 rounded bg-blue-50 border border-blue-200 text-xs font-bold text-blue-700">SAKIT</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- TAB CONTAINER: NILAI -->
+                <div id="tab-nilai" class="tab-content hidden space-y-6">
+                    <div>
+                        <h2 class="text-2xl font-bold font-headline text-primary">Hasil Ujian & Rapor</h2>
+                        <p class="text-xs text-on-surface-variant mt-1">Transkrip nilai ujian online mandiri yang sudah
+                            dinilai.</p>
+                    </div>
+
+                    <div class="space-y-4">
+                        <div class="lumina-card p-5 space-y-4">
+                            <div class="flex justify-between items-center border-b border-outline-variant pb-3">
+                                <h4 class="font-headline font-bold text-base text-primary">Rekayasa Perangkat Lunak
+                                    (UAS)</h4>
+                                <span class="text-xl font-bold text-secondary">92.5</span>
+                            </div>
+                            <div class="grid grid-cols-3 gap-2 text-center text-xs">
+                                <div>
+                                    <span class="text-on-surface-variant block">Soal Benar</span>
+                                    <span class="font-bold text-on-surface block mt-1">38 / 40</span>
+                                </div>
+                                <div>
+                                    <span class="text-on-surface-variant block">Skor PG</span>
+                                    <span class="font-bold text-on-surface block mt-1">82.5</span>
+                                </div>
+                                <div>
+                                    <span class="text-on-surface-variant block">Skor Esai</span>
+                                    <span class="font-bold text-on-surface block mt-1">10.0</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="lumina-card p-5 space-y-4">
+                            <div class="flex justify-between items-center border-b border-outline-variant pb-3">
+                                <h4 class="font-headline font-bold text-base text-primary">Bahasa Indonesia (Quiz 1)
+                                </h4>
+                                <span class="text-xl font-bold text-secondary">80.0</span>
+                            </div>
+                            <div class="grid grid-cols-3 gap-2 text-center text-xs">
+                                <div>
+                                    <span class="text-on-surface-variant block">Soal Benar</span>
+                                    <span class="font-bold text-on-surface block mt-1">32 / 40</span>
+                                </div>
+                                <div>
+                                    <span class="text-on-surface-variant block">Skor PG</span>
+                                    <span class="font-bold text-on-surface block mt-1">80.0</span>
+                                </div>
+                                <div>
+                                    <span class="text-on-surface-variant block">Skor Esai</span>
+                                    <span class="font-bold text-on-surface block mt-1">-</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- TAB CONTAINER: SPP -->
+                <div id="tab-spp" class="tab-content hidden space-y-6">
+                    <div>
+                        <h2 class="text-2xl font-bold font-headline text-primary">Pembiayaan Sekolah (SPP)</h2>
+                        <p class="text-xs text-on-surface-variant mt-1">Pantau tagihan bulanan SPP dan riwayat transaksi
+                            administrasi Anda.</p>
+                    </div>
+
+                    <div
+                        class="lumina-card p-6 bg-gradient-to-br from-primary to-primary/80 text-white relative overflow-hidden">
+                        <div class="absolute right-0 top-0 opacity-10 pointer-events-none">
+                            <span class="material-symbols-outlined text-[150px]">payments</span>
+                        </div>
+                        <div class="space-y-4 relative z-10">
+                            <div>
+                                <span class="text-xs text-white/70 block uppercase tracking-wider">Virtual Account
+                                    Pembayaran (BNI)</span>
+                                <p class="text-2xl font-bold tracking-widest mt-1">9880057471759800</p>
+                            </div>
+                            <div class="flex justify-between items-end">
+                                <div>
+                                    <span class="text-xs text-white/70 block">Tagihan Bulan Ini (Juli 2026)</span>
+                                    <p class="text-xl font-bold">Rp 250.000</p>
+                                </div>
+                                <span class="px-3 py-1 rounded bg-yellow-500 text-black text-xs font-bold">BELUM
+                                    BAYAR</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="lumina-card p-5">
+                        <h4 class="font-headline font-bold text-sm text-primary mb-4">Riwayat Pembayaran Terakhir</h4>
+                        <div class="space-y-3">
+                            <div
+                                class="flex justify-between items-center py-2 border-b border-outline-variant last:border-0">
+                                <div>
+                                    <p class="text-sm font-semibold text-on-surface">SPP Bulan Juni 2026</p>
+                                    <span class="text-xs text-on-surface-variant">Transfer Bank BNI • Ref:
+                                        #TRX89211</span>
+                                </div>
+                                <div class="text-right">
+                                    <span
+                                        class="px-2.5 py-0.5 rounded bg-green-50 border border-green-200 text-xs font-bold text-green-700">LUNAS</span>
+                                    <span class="block text-xs font-semibold text-on-surface mt-1">Rp 250.000</span>
+                                </div>
+                            </div>
+                            <div
+                                class="flex justify-between items-center py-2 border-b border-outline-variant last:border-0">
+                                <div>
+                                    <p class="text-sm font-semibold text-on-surface">SPP Bulan Mei 2026</p>
+                                    <span class="text-xs text-on-surface-variant">Transfer Bank BNI • Ref:
+                                        #TRX84910</span>
+                                </div>
+                                <div class="text-right">
+                                    <span
+                                        class="px-2.5 py-0.5 rounded bg-green-50 border border-green-200 text-xs font-bold text-green-700">LUNAS</span>
+                                    <span class="block text-xs font-semibold text-on-surface mt-1">Rp 250.000</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- TAB CONTAINER: CATATAN -->
+                <div id="tab-catatan" class="tab-content hidden space-y-6">
+                    <div>
+                        <h2 class="text-2xl font-bold font-headline text-primary">Catatan Guru & Bimbingan</h2>
+                        <p class="text-xs text-on-surface-variant mt-1">Umpan balik, masukan, dan bimbingan konseling
+                            dari Wali Kelas atau Guru Pengajar.</p>
+                    </div>
+
+                    <div class="space-y-4">
+                        <!-- Note 1 -->
+                        <div class="lumina-card p-5 space-y-3 border-t-4 border-t-secondary">
+                            <div class="flex justify-between items-center">
+                                <div class="flex items-center gap-2">
+                                    <span
+                                        class="px-2 py-0.5 rounded bg-yellow-50 border border-yellow-200 text-[10px] font-bold text-secondary">AKADEMIK</span>
+                                    <span class="text-xs text-on-surface-variant">Oleh: Budi Santoso, S.Kom (Wali
+                                        Kelas)</span>
+                                </div>
+                                <span class="text-xs text-on-surface-variant">02 Juli 2026</span>
+                            </div>
+                            <p class="text-sm text-on-surface font-medium leading-relaxed">
+                                "Agung sudah sangat baik dalam penugasan coding front-end Laravel. Terus pertahankan
+                                kerajinan belajarnya dan bimbing teman kelompoknya yang masih kesulitan dalam materi
+                                routing."
+                            </p>
+                        </div>
+
+                        <!-- Note 2 -->
+                        <div class="lumina-card p-5 space-y-3 border-t-4 border-t-primary">
+                            <div class="flex justify-between items-center">
+                                <div class="flex items-center gap-2">
+                                    <span
+                                        class="px-2 py-0.5 rounded bg-blue-50 border border-blue-200 text-[10px] font-bold text-primary">KEDISIPLINAN</span>
+                                    <span class="text-xs text-on-surface-variant">Oleh: Dra. Sri Wahyuni</span>
+                                </div>
+                                <span class="text-xs text-on-surface-variant">25 Juni 2026</span>
+                            </div>
+                            <p class="text-sm text-on-surface font-medium leading-relaxed">
+                                "Mohon tingkatkan ketepatan waktu masuk kelas Matematika di jam pertama. Beberapa kali
+                                tercatat terlambat 10 menit tanpa konfirmasi."
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- TAB CONTAINER: CHAT -->
+                <div id="tab-chat" class="tab-content hidden space-y-6">
+                    <div>
+                        <h2 class="text-2xl font-bold font-headline text-primary">Obrolan (Hermony Chat)</h2>
+                        <p class="text-xs text-on-surface-variant mt-1">Hubungi guru pengajar atau teman sekelas untuk
+                            mendiskusikan materi.</p>
+                    </div>
+
+                    <div class="lumina-card grid grid-cols-1 md:grid-cols-3 overflow-hidden h-[450px]">
+                        <!-- Contact list -->
+                        <div class="border-r border-outline-variant flex flex-col h-full bg-surface">
+                            <div class="p-3 border-b border-outline-variant">
+                                <input type="text" placeholder="Cari Guru atau Teman..."
+                                    class="w-full text-xs px-3 py-2 border border-outline-variant rounded-lg focus:outline-none focus:border-primary" />
+                            </div>
+                            <div class="flex-1 overflow-y-auto divide-y divide-outline-variant">
+                                <button
+                                    class="w-full p-3 flex items-center gap-3 hover:bg-background transition-colors text-left bg-primary-container/30">
+                                    <div
+                                        class="w-10 h-10 rounded-full bg-primary text-white flex items-center justify-center font-bold text-sm">
+                                        BS</div>
+                                    <div>
+                                        <p class="text-xs font-bold text-on-surface">Budi Santoso, S.Kom.</p>
+                                        <span class="text-[10px] text-primary font-bold">Online</span>
+                                    </div>
+                                </button>
+                                <button
+                                    class="w-full p-3 flex items-center gap-3 hover:bg-background transition-colors text-left">
+                                    <div
+                                        class="w-10 h-10 rounded-full bg-secondary text-white flex items-center justify-center font-bold text-sm">
+                                        SW</div>
+                                    <div>
+                                        <p class="text-xs font-semibold text-on-surface">Dra. Sri Wahyuni</p>
+                                        <span class="text-[10px] text-on-surface-variant">Offline</span>
+                                    </div>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Chat pane -->
+                        <div class="col-span-2 flex flex-col h-full bg-background/50">
+                            <!-- Head -->
+                            <div class="p-3 bg-surface border-b border-outline-variant flex items-center gap-3">
+                                <div
+                                    class="w-8 h-8 rounded-full bg-primary text-white flex items-center justify-center font-bold text-xs">
+                                    BS</div>
+                                <div>
+                                    <p class="text-xs font-bold text-on-surface">Budi Santoso, S.Kom.</p>
+                                    <span class="text-[9px] text-green-600 font-bold">Sedang Mengetik...</span>
+                                </div>
+                            </div>
+                            <!-- Messages -->
+                            <div class="flex-1 p-4 overflow-y-auto space-y-3 text-xs">
+                                <div class="flex items-end gap-2 max-w-[80%]">
+                                    <div
+                                        class="bg-surface border border-outline-variant p-3 rounded-xl rounded-bl-none text-on-surface">
+                                        Halo Agung, apa ada kesulitan dalam tugas pembuatan landing page Tailwind
+                                        kemarin?
+                                    </div>
+                                </div>
+                                <div class="flex items-end gap-2 max-w-[80%] ml-auto justify-end">
+                                    <div class="bg-primary text-white p-3 rounded-xl rounded-br-none">
+                                        Halo Pak, aman. Hanya sedikit bingung tentang layout responsif di resolusi
+                                        tablet, tapi sekarang sudah saya kirim tugasnya.
+                                    </div>
+                                </div>
+                            </div>
+                            <!-- Footer input -->
+                            <div class="p-3 bg-surface border-t border-outline-variant flex items-center gap-2">
+                                <input type="text" placeholder="Tulis pesan..."
+                                    class="flex-1 text-xs px-3 py-2 border border-outline-variant rounded-lg focus:outline-none focus:border-primary" />
+                                <button
+                                    class="p-2 bg-primary hover:bg-primary/90 text-white rounded-lg transition-colors flex items-center justify-center">
+                                    <span class="material-symbols-outlined text-sm">send</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </main>
+    </div>
+
+    <!-- Bottom Navigation (Mobile) -->
+    <nav
+        class="lg:hidden fixed bottom-0 left-0 w-full z-50 flex justify-around items-center px-2 py-3 bg-surface border-t border-outline-variant shadow-lg pb-safe">
+        <button onclick="switchTab('home')"
+            class="mobile-tab-btn flex flex-col items-center justify-center text-primary">
+            <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">home</span>
+            <span class="text-[10px] font-bold mt-1">Home</span>
+        </button>
+        <button onclick="switchTab('materi')"
+            class="mobile-tab-btn flex flex-col items-center justify-center text-on-surface-variant">
+            <span class="material-symbols-outlined">auto_stories</span>
+            <span class="text-[10px] font-medium mt-1">Materi</span>
+        </button>
+        <button onclick="switchTab('tugas')"
+            class="mobile-tab-btn flex flex-col items-center justify-center text-on-surface-variant">
+            <span class="material-symbols-outlined">assignment</span>
+            <span class="text-[10px] font-medium mt-1">Tugas</span>
+        </button>
+        <button onclick="switchTab('cbt')"
+            class="mobile-tab-btn flex flex-col items-center justify-center text-on-surface-variant">
+            <span class="material-symbols-outlined">quiz</span>
+            <span class="text-[10px] font-medium mt-1">Ujian</span>
+        </button>
+        <button onclick="switchTab('chat')"
+            class="mobile-tab-btn flex flex-col items-center justify-center text-on-surface-variant">
+            <span class="material-symbols-outlined">chat</span>
+            <span class="text-[10px] font-medium mt-1">Chat</span>
+        </button>
+    </nav>
+
+    <script>
+        function switchTab(tabId) {
+            // Hide all tabs
+            document.querySelectorAll('.tab-content').forEach(el => {
+                el.classList.add('hidden');
+            });
+
+            // Show current tab
+            const activeTab = document.getElementById('tab-' + tabId);
+            if (activeTab) {
+                activeTab.classList.remove('hidden');
+            }
+
+            // Update Desktop Header Tab styles
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.classList.remove('text-primary', 'border-b-2', 'border-primary', 'font-semibold');
+                btn.classList.add('text-on-surface-variant', 'font-medium');
+            });
+
+            // Find matching header tab button (if any) and highlight it
+            const headerBtnMap = {
+                'home': 0,
+                'materi': 1,
+                'tugas': 2,
+                'chat': 3
+            };
+            const idx = headerBtnMap[tabId];
+            if (idx !== undefined) {
+                const headerBtn = document.querySelectorAll('.tab-btn')[idx];
+                if (headerBtn) {
+                    headerBtn.classList.add('text-primary', 'border-b-2', 'border-primary', 'font-semibold');
+                    headerBtn.classList.remove('text-on-surface-variant', 'font-medium');
+                }
+            }
+
+            // Update Desktop Sidebar active styles
+            document.querySelectorAll('.sidebar-btn').forEach(btn => {
+                btn.classList.remove('bg-primary', 'text-white', 'font-semibold');
+                btn.classList.add('text-on-surface-variant', 'font-medium');
+            });
+            const sideBtn = document.getElementById('side-' + tabId);
+            if (sideBtn) {
+                sideBtn.classList.add('bg-primary', 'text-white', 'font-semibold');
+                sideBtn.classList.remove('text-on-surface-variant', 'font-medium');
+            }
+
+            // Update Mobile Bottom Nav active styles
+            document.querySelectorAll('.mobile-tab-btn').forEach(btn => {
+                btn.classList.remove('text-primary');
+                btn.classList.add('text-on-surface-variant');
+                const icon = btn.querySelector('.material-symbols-outlined');
+                if (icon) {
+                    icon.style.fontVariationSettings = "'FILL' 0";
+                }
+            });
+
+            // Find mobile nav index
+            const mobNavMap = {
+                'home': 0,
+                'materi': 1,
+                'tugas': 2,
+                'cbt': 3,
+                'chat': 4
+            };
+            const mobIdx = mobNavMap[tabId];
+            if (mobIdx !== undefined) {
+                const mobBtn = document.querySelectorAll('.mobile-tab-btn')[mobIdx];
+                if (mobBtn) {
+                    mobBtn.classList.add('text-primary');
+                    mobBtn.classList.remove('text-on-surface-variant');
+                    const icon = mobBtn.querySelector('.material-symbols-outlined');
+                    if (icon) {
+                        icon.style.fontVariationSettings = "'FILL' 1";
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        /* iOS Safe Area Padding for Bottom Nav */
+        @supports (padding-bottom: env(safe-area-inset-bottom)) {
+            .pb-safe {
+                padding-bottom: calc(0.75rem + env(safe-area-inset-bottom));
+            }
+        }
+    </style>
+</body>
+
+</html>
