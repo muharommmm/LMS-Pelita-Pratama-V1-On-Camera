@@ -1,17 +1,5 @@
-<div class="container pt-4">
-    <div class="info-box bg-transparent shadow-none">
-        <?php
-        $logo_app = $setting->logo_kanan == null ? base_url() . 'assets/img/favicon.png' : base_url() . $setting->logo_kanan;
-        ?>
-        <img src="<?= $logo_app ?>" width="60" height="60">
-        <div class="info-box-content ml-2" style="text-shadow: 1px 1px 2px #050505ff">
-            <h5 class="info-box-text text-wrap" style="color:#1A6B34;"> <b><?= $setting->nama_aplikasi ?></b> </h5>
-            <span class="info-box-text" style="color:#1A6B34;"> <?= $setting->alamat ?>
-</span>
-
-        </div>
-    </div>
-    <div class="w-full max-w-sm mx-auto mt-20 p-8 rounded-[2rem] bg-white/10 backdrop-blur-sm border border-white/30 shadow-2xl relative z-10">
+<div class="container min-h-screen flex items-center justify-center p-4">
+    <div class="w-full max-w-sm p-8 rounded-[2rem] bg-white/10 backdrop-blur-sm border border-white/30 shadow-2xl relative z-10">
     <div class="text-center mb-6">
         <img src="<?php echo base_url('assets/img/login.png'); ?>" alt="Logo" class="max-w-[100px] mx-auto mb-3 drop-shadow-md">
         <p class="text-xs text-slate-700 tracking-widest font-bold drop-shadow-sm">L O G I N</p>

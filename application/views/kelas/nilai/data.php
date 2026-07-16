@@ -162,15 +162,17 @@
 
         docTitle += 'Rekap Nilai ' + selmapel + ' ' + selkelas + ' ' + sthn + ' ' + selsmt;
 
-        if (data.mapels.length == 0) {
-            $('#konten-absensi').html('<p>Tidak Jadwal untuk mapel ' + selmapel + ' kelas ' + selkelas + '</p>');
+        if (Object.keys(data.materi).length == 0) {
+            $('#konten-absensi').html('<p>Tidak ada Materi/Tugas untuk mapel ' + selmapel + ' kelas ' + selkelas + '</p>');
             $('#loading').addClass('d-none');
             return;
         }
 
         var numCol = 0;
         $.each(data.bulans, function (k, v) {
-            numCol += Object.keys(data.materi[v]).length;
+            if (data.materi[v]) {
+                numCol += Object.keys(data.materi[v]).length;
+            }
         });
 
         var konten = '<div style="width:100%;" id="jdl"><p style="text-align:center;font-size:14pt; font-weight: bold">REKAPITULASI NILAI SISWA</p></div>' +
@@ -196,17 +198,15 @@
             '<th rowspan="3" style="min-width: 40px; border: 1px solid #c0c0c0; text-align: center; vertical-align: middle;margin: 0px;" ' + styleHead + '>No.</th>' +
             '<th rowspan="3" style="min-width: 100px; border: 1px solid #c0c0c0; text-align: center; vertical-align: middle;margin: 0px;" ' + styleHead + '>NIS</th>' +
             '<th rowspan="3" style="min-width: 200px; border: 1px solid #c0c0c0; text-align: center; vertical-align: middle;margin: 0px;" ' + styleHead + '>Nama</th>' +
-            '<th colspan="' + (numCol + 6) + '" style="border: 1px solid #c0c0c0; text-align: center; vertical-align: middle;margin: 0px;" ' + styleHead + '>Bulan</th>' +
+            '<th colspan="' + (numCol + data.bulans.length) + '" style="border: 1px solid #c0c0c0; text-align: center; vertical-align: middle;margin: 0px;" ' + styleHead + '>Bulan</th>' +
             '<th rowspan="3" style="min-width: 100px; border: 1px solid #c0c0c0; text-align: center; vertical-align: middle;margin: 0px;" ' + styleHead + '>Nilai Rata-rata</th>' +
             '</tr><tr>';
 
         $.each(data.bulans, function (k, v) {
             var ind = parseInt(v);
-            var lon = Object.keys(data.materi[v]).length;
+            var lon = data.materi[v] ? Object.keys(data.materi[v]).length : 0;
             konten += '<th colspan="' + lon + '"  style="border: 1px solid #c0c0c0; text-align: center; vertical-align: middle;margin: 0px;" ' + styleHead + '>' + namaBulan[ind] + '</th>';
             konten += '<th rowspan="2" class="tanggal" style="border: 1px solid #c0c0c0; text-align: center; vertical-align: middle;margin: 0px;" ' + styleHead + '>RT</th>';
-            //var th = parseInt(sthn);
-            //if (!(th>today.getFullYear()) && !(ind > today.getMonth()) {}
         });
 
         konten += '</tr><tr>';
@@ -214,11 +214,13 @@
         var colWidth = '4,15,35';
         $.each(data.bulans, function (i, bln) {
             var no = 1;
-            $.each(data.materi[bln], function (tgl, jam) {
-                konten += '<th class="tanggal" style="border: 1px solid #c0c0c0; text-align: center; vertical-align: middle;margin: 0px;" ' + styleHead + '>P' + no + '</th>';
-                no++;
-                colWidth += ',4';
-            });
+            if (data.materi[bln]) {
+                $.each(data.materi[bln], function (id_materi, item) {
+                    konten += '<th class="tanggal" title="' + item.judul_materi + '" style="border: 1px solid #c0c0c0; text-align: center; vertical-align: middle;margin: 0px;" ' + styleHead + '>P' + no + '</th>';
+                    no++;
+                    colWidth += ',4';
+                });
+            }
         });
         colWidth += ',4,4,4,4,4,4,15';
         konten += '</tr></thead><tbody>';
@@ -232,64 +234,44 @@
             var totalMtr = 0;
             var totalNilai = 0;
             $.each(data.bulans, function (i, nbln) {
-                var tgls = Object.keys(data.materi[nbln]);
-                tgls.sort(function (a, b) {
-                    return (a < b) ? -1 : 1;
-                });
                 var jmlMtrBulan = 0;
                 var jmlNilaiBulan = 0;
-                $.each(tgls, function (index, tgl) {
-                    var a = new Date(sthn, parseInt(nbln) - 1, tgl);
-                    var d = a.getDay();
-                    var arrJam = [];
-
-                    if (a <= today) {
-                        var adaMateri = {}, adaTugas = {};
-                        var jadwalPerHari = data.mapels[d];
-                        $.each(jadwalPerHari, function (jamke, valJam) {
-                            arrJam.push(jamke);
-                            adaMateri[jamke] = data.materi[nbln][tgl][jamke]['1'] != null;
-                            adaTugas[jamke] = data.materi[nbln][tgl][jamke]['2'] != null;
-                        });
-                        var bg = 'lightgrey';
+                if (data.materi[nbln]) {
+                    $.each(data.materi[nbln], function (id_materi, item) {
+                        var nilai = 0;
+                        var bg = 'white';
                         var style = styleNormal;
-                        var nilaiMateri = 0, nilaiTugas = 0;
-                        var jmlJamMtr = 0;
-                        $.each(arrJam, function (index, jj) {
-                            if (adaMateri[jj]) {
-                                jmlJamMtr += 1;
-                            }
-                            if (adaTugas[jj]) {
-                                jmlJamMtr += 1;
-                            }
+                        var hasLog = false;
+                        
+                        if (value.nilai_materi != null && value.nilai_materi[id_materi] != null && value.nilai_materi[id_materi].nilai != null) {
+                            nilai = parseInt(value.nilai_materi[id_materi].nilai);
+                            hasLog = true;
+                        } else if (value.nilai_tugas != null && value.nilai_tugas[id_materi] != null && value.nilai_tugas[id_materi].nilai != null) {
+                            nilai = parseInt(value.nilai_tugas[id_materi].nilai);
+                            hasLog = true;
+                        }
 
-                            bg = !adaMateri[jj] && !adaTugas[jj] ? 'lightgrey' : 'white';
-                            style = !adaMateri[jj] && !adaTugas[jj] ? styleEmpty : styleNormal;
-                            if (value.nilai_materi[nbln] != null && value.nilai_materi[nbln][tgl] != null && value.nilai_materi[nbln][tgl][jj] != null && value.nilai_materi[nbln][tgl][jj].nilai != null) {
-                                if (adaMateri[jj]) {
-                                    nilaiMateri += parseInt(value.nilai_materi[nbln][tgl][jj].nilai);
-                                }
-                            }
-                            if (value.nilai_tugas[nbln] != null && value.nilai_tugas[nbln][tgl] != null && value.nilai_tugas[nbln][tgl][jj] != null && value.nilai_tugas[nbln][tgl][jj].nilai != null) {
-                                if (adaTugas[jj]) nilaiTugas += parseInt(value.nilai_tugas[nbln][tgl][jj].nilai);
-                            }
-                        });
-                        var nilaiHarian = nilaiMateri + nilaiTugas;
-                        jmlMtrBulan += jmlJamMtr;
-                        jmlNilaiBulan += nilaiHarian;
-                        var nm = nilaiMateri == 0 ? '&ensp;' : '' + Math.round(nilaiHarian / jmlJamMtr);
-                        konten += '<td style="border: 1px solid #c0c0c0; text-align: center; vertical-align: middle;margin: 0px;background: ' + bg + '" ' + style + '>' + nm + '</td>';
-                    } else {
-                        konten += '<td style="border: 1px solid #c0c0c0; text-align: center; vertical-align: middle;margin: 0px;background: #FEFEC5" ' + styleNonaktif + '>&ensp;</td>';
-                    }
-                });
+                        if (hasLog) {
+                            bg = 'white';
+                            style = styleNormal;
+                            jmlMtrBulan += 1;
+                            jmlNilaiBulan += nilai;
+                            var showVal = '' + nilai;
+                        } else {
+                            bg = 'lightgrey';
+                            style = styleEmpty;
+                            var showVal = '&ensp;';
+                        }
+                        konten += '<td style="border: 1px solid #c0c0c0; text-align: center; vertical-align: middle;margin: 0px;background: ' + bg + '" ' + style + '>' + showVal + '</td>';
+                    });
+                }
 
                 totalMtr += jmlMtrBulan;
                 totalNilai += jmlNilaiBulan;
-                var rtb = jmlMtrBulan == 0 && jmlNilaiBulan == 0 ? '0' : '' + Math.round(jmlNilaiBulan / jmlMtrBulan);
+                var rtb = jmlMtrBulan == 0 ? '0' : '' + Math.round(jmlNilaiBulan / jmlMtrBulan);
                 konten += '<td style="border: 1px solid #c0c0c0; text-align: center; vertical-align: middle;margin: 0px;" ' + styleRata + '>' + rtb + '</td>';
             });
-            var rts = totalMtr == 0 && totalNilai == 0 ? '0' : '' + Math.round(totalNilai / totalMtr);
+            var rts = totalMtr == 0 ? '0' : '' + Math.round(totalNilai / totalMtr);
             konten += '<td style="border: 1px solid #c0c0c0; text-align: center; vertical-align: middle;margin: 0px;" ' + styleRata + '>' + rts + '</td>' +
                 '</tr>';
             no += 1;
@@ -424,13 +406,41 @@
     }
 
     function exportExcel() {
-        var table = document.querySelector("#excel");
-        TableToExcel.convert(table, {
-            name: docTitle + '.xlsx',
-            sheet: {
-                name: "Sheet 1"
-            }
-        });
+        var table = document.querySelector("#excel"); 
+        
+        if (!table) {
+            swal.fire("Error", "Tabel tidak ditemukan untuk diekspor!", "error");
+            return;
+        }
+
+        var cloneTable = table.cloneNode(true);
+        $(cloneTable).find('.d-none, .aksi').remove();
+
+        var html = cloneTable.outerHTML;
+        var template = `
+            <html xmlns:o="urn:schemas-microsoft-com:office:office" 
+                  xmlns:x="urn:schemas-microsoft-com:office:excel" 
+                  xmlns="http://www.w3.org/TR/REC-html40">
+            <head>
+                <meta charset="UTF-8">
+            </head>
+            <body>
+                ${html}
+            </body>
+            </html>
+        `;
+
+        var blob = new Blob([template], { type: 'application/vnd.ms-excel' });
+        var url = window.URL.createObjectURL(blob);
+        
+        var link = document.createElement("a");
+        link.href = url;
+        link.download = docTitle + ".xls";
+        document.body.appendChild(link);
+        link.click();
+        
+        document.body.removeChild(link);
+        window.URL.revokeObjectURL(url);
     }
 
 </script>

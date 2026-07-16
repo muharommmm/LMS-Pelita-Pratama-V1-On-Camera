@@ -47,16 +47,6 @@
 
 
 <div class="content">
-    <div class="info-box bg-transparent shadow-none">
-        <?php
-        $logo_app = $setting->logo_kiri == null ? base_url() . 'assets/img/favicon.png' : base_url() . $setting->logo_kiri . '?t=' . time();
-        ?>
-        <img src="<?= $logo_app ?>" width="60" height="60">
-        <div class="info-box-content ml-2" style="text-shadow: 1px 1px 2px #000000">
-            <h5 class="info-box-text text-white text-wrap"><b><?= $setting->nama_aplikasi ?></b></h5>
-            <span class="info-box-text text-white"><?= $setting->alamat ?></span>
-        </div>
-    </div>
     <div class="container">
         <div class="row">
             <div class="col-md-6 order-md-2">

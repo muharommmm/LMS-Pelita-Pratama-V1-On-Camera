@@ -282,6 +282,143 @@
         return $ret;
     }
 
+    public function getRekapMateriSemesterV2($id_kelas, $id_materi = null) {
+        $tp = $this->db->where(['active' => 1])->get('master_tp')->row();
+        $smt = $this->db->where(['active' => 1])->get('master_smt')->row();
+        $id_tp = $tp ? $tp->id_tp : null;
+        $id_smt = $smt ? $smt->id_smt : null;
+
+        $this->db->select("a.id_siswa, b.id_log, b.log_time, b.finish_time, b.id_materi," .
+            " DAYOFMONTH(c.tgl_mulai) as tanggal," .
+            " MONTH(c.tgl_mulai) as bulan," .
+            " YEAR(c.tgl_mulai) as tahun," .
+            " TIME_FORMAT(b.log_time, \"%H:%i\") as jam," .
+            " b.nilai," .
+            " d.id_jadwal as jam_ke," .
+            " c.jenis," .
+            " c.judul_materi," .
+            " c.kode_materi");
+        $this->db->from("kelas_siswa a");
+        if ($id_materi != null) {
+            $this->db->join("log_materi b", "a.id_siswa=b.id_siswa AND b.id_materi=" . $this->db->escape($id_materi), "left");
+        } else {
+            $this->db->join("log_materi b", "a.id_siswa=b.id_siswa", "left");
+        }
+        $this->db->join("kelas_materi c", "b.id_materi=c.id_materi", "left");
+        $this->db->join("jadwal_fleksibel d", "c.id_mapel=d.mapel_id AND a.id_kelas=d.class_id AND (WEEKDAY(c.tgl_mulai) + 1)=d.day", "left");
+        
+        $this->db->where("a.id_kelas", $id_kelas);
+        if ($id_tp != null) {
+            $this->db->where("a.id_tp", $id_tp);
+        }
+        if ($id_smt != null) {
+            $this->db->where("a.id_smt", $id_smt);
+        }
+        
+        $result = $this->db->get()->result();
+        $ret = [];
+        if ($result) {
+            foreach ($result as $row) {
+                if ($row->id_materi == null) {
+                    continue;
+                }
+                $jenis = isset($row->jenis) ? $row->jenis : '1';
+                $bulan = isset($row->bulan) ? str_pad($row->bulan, 2, '0', STR_PAD_LEFT) : '00';
+                $tgl = isset($row->tanggal) ? str_pad($row->tanggal, 2, '0', STR_PAD_LEFT) : '00';
+                $jam = isset($row->jam_ke) ? $row->jam_ke : '0';
+                $ret[$jenis][$row->id_siswa][$bulan][$tgl][$jam] = $row;
+            }
+        }
+        return $ret;
+    }
+
+    public function getJadwalMapelByMapelV2($kelas, $mapel, $tp, $smt) {
+        $this->db->select("a.day as id_hari, a.id_jadwal as jam_ke, a.start_time, a.end_time, b.nama_mapel, b.kode");
+        $this->db->from("jadwal_fleksibel a");
+        $this->db->join("master_mapel b", "a.mapel_id=b.id_mapel", "left");
+        $this->db->where("a.tp_id", $tp);
+        $this->db->where("a.smt_id", $smt);
+        $this->db->where("a.class_id", $kelas);
+        if ($mapel != null) {
+            $this->db->where("a.mapel_id", $mapel);
+        }
+        return $this->db->get()->result();
+    }
+
+    public function getAllMateriByTglV2($id_kelas, $tgl, $arr_mapel) {
+        $this->db->select("a.*, a.id_materi, a.kode_materi, a.materi_kelas, a.tgl_mulai, c.nama_guru, d.kode, d.nama_mapel");
+        $this->db->from("kelas_materi a");
+        $this->db->join("master_guru c", "a.id_guru=c.id_guru", "left");
+        $this->db->join("master_mapel d", "a.id_mapel=d.id_mapel", "left");
+        $this->db->where("DATE(a.tgl_mulai)", $tgl);
+        $this->db->where("a.status", 1);
+        if (count($arr_mapel) > 0) {
+            $this->db->where_in("a.id_mapel", $arr_mapel);
+        }
+        $result = $this->db->get()->result();
+        
+        $ret = [];
+        if ($result) {
+            foreach ($result as $row) {
+                $classes = @unserialize($row->materi_kelas);
+                if (is_array($classes) && in_array($id_kelas, $classes)) {
+                    $day = date('N', strtotime($tgl));
+                    $schedules = $this->db->select("id_jadwal")
+                        ->where(['class_id' => $id_kelas, 'day' => $day, 'mapel_id' => $row->id_mapel])
+                        ->get('jadwal_fleksibel')
+                        ->result();
+                    
+                    if ($schedules) {
+                        foreach ($schedules as $s) {
+                            $ret[$row->id_mapel][$s->id_jadwal][$row->jenis] = $row;
+                        }
+                    } else {
+                        $ret[$row->id_mapel]['0'][$row->jenis] = $row;
+                    }
+                }
+            }
+        }
+        return $ret;
+    }
+
+    public function getMateriKelasMapel($id_kelas, $id_mapel) {
+        $this->db->select("id_materi, jenis, judul_materi, kode_materi, tgl_mulai, materi_kelas");
+        $this->db->from("kelas_materi");
+        $this->db->where("id_mapel", $id_mapel);
+        $this->db->where("status", 1);
+        $result = $this->db->get()->result();
+        
+        $ret = [];
+        if ($result) {
+            foreach ($result as $row) {
+                $classes = @unserialize($row->materi_kelas);
+                if (is_array($classes) && in_array($id_kelas, $classes)) {
+                    $ret[] = $row;
+                }
+            }
+        }
+        return $ret;
+    }
+
+    public function getRekapMateriSemesterV3($id_kelas, $id_mapel) {
+        $this->db->select("b.id_siswa, b.nilai, b.id_materi, c.jenis");
+        $this->db->from("kelas_siswa a");
+        $this->db->join("log_materi b", "a.id_siswa=b.id_siswa", "inner");
+        $this->db->join("kelas_materi c", "b.id_materi=c.id_materi", "inner");
+        $this->db->where("a.id_kelas", $id_kelas);
+        $this->db->where("c.id_mapel", $id_mapel);
+        $result = $this->db->get()->result();
+        
+        $ret = [];
+        if ($result) {
+            foreach ($result as $row) {
+                $jenis = $row->jenis;
+                $ret[$jenis][$row->id_siswa][$row->id_materi] = $row;
+            }
+        }
+        return $ret;
+    }
+
     public function getNilaiMateriSiswaFlex($id_siswa) {
         $this->db->select("a.nilai, a.catatan, a.log_time as jadwal_materi, c.kode_materi, c.judul_materi, c.jenis, d.nama_mapel, d.kode");
         $this->db->from("log_materi a");
