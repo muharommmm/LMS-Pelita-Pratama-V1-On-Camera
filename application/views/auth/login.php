@@ -49,7 +49,7 @@
 <script src="<?= base_url() ?>/assets/app/js/jquery.backstretch.js"></script>
 <script type="text/javascript">
     let base_url = '<?=base_url();?>';
-    var img = ["2.png", "3.png", "4.png"];
+    var img = ["2.jpg", "3.jpg", "4.jpg"];
 
     $.backstretch([
         base_url + 'assets/img/' + img[0],
