@@ -100,6 +100,18 @@
                                             <?php endforeach; ?>
                                         </ul>
                                     </div>
+
+                                    <div class="alert alert-default-warning mt-3 border border-warning" style="background-color: #fff8e1; color: #b78103; border-radius: 8px;">
+                                        <h5><i class="icon fas fa-exclamation-triangle"></i> <b>PENTING: Protokol Keamanan Kamera</b></h5>
+                                        <p class="mb-1 text-sm">Ujian ini menggunakan sistem pengawasan kamera aktif. Sebelum memulai, mohon pastikan:</p>
+                                        <ul class="pl-4 mb-2 text-sm">
+                                            <li>Pastikan link alamat browser Anda diawali dengan <b>https://</b>.</li>
+                                            <li>Berikan <b>izin akses kamera</b> ketika diminta oleh browser setelah Anda menekan tombol <b>MULAI</b>.</li>
+                                            <li>Sistem akan memantau, mendeteksi kecurangan visual, dan merekam aktivitas secara real-time.</li>
+                                            <li>Jika izin kamera ditolak atau diblokir, soal ujian <b>TIDAK AKAN MUNCUL</b> dan Anda akan langsung dikembalikan ke Dashboard.</li>
+                                            <li>Sistem mendukung kamera di perangkat HP (Android/iOS) dan Laptop/PC.</li>
+                                        </ul>
+                                    </div>
                                     <br>
                                     <span class="float-right" data-toggle="tooltip" title="MULAI">
                                         <button id="load-soal" type="submit" class="btn btn-success">MULAI</button>

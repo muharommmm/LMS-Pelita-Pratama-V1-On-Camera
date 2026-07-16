@@ -296,7 +296,34 @@
              unselectable="on">
             <div class="row">
                 <div class="col-12">
-                    <div class="card my-shadow">
+                    <div id="accordionKamera" class="mb-3">
+                      <div class="card border-danger">
+                        <div class="card-header bg-white" id="headingKamera" style="padding: 10px;">
+                          <h5 class="mb-0">
+                            <button class="btn btn-link text-danger font-weight-bold w-100 d-flex justify-content-between align-items-center flex-wrap" type="button" data-toggle="collapse" data-target="#collapseKamera" aria-expanded="true" aria-controls="collapseKamera" style="text-decoration: none;">
+                              <div>
+                                <i class="fas fa-video"></i> Pengawasan Ujian Aktif 
+                                <span class="badge badge-danger blink" style="animation: blinker 1.5s linear infinite;">REC</span>
+                              </div>
+                              <span class="text-muted font-weight-normal text-xs" style="font-size: 11px;">
+                                <i class="fas fa-compress-alt"></i> (Klik di sini untuk sembunyikan/tampilkan kamera)
+                              </span>
+                            </button>
+                          </h5>
+                        </div>
+                        <div id="collapseKamera" class="collapse show" aria-labelledby="headingKamera" data-parent="#accordionKamera">
+                          <div class="card-body text-center bg-light">
+                            <video id="webcam-monitor" autoplay playsinline style="width: 100%; max-width: 250px; border: 3px solid #dc3545; border-radius: 8px; transform: scaleX(-1);"></video>
+                            <p class="text-muted small mt-2 mb-0"><b>Peringatan:</b> Sistem AI memantau pergerakan Anda selama ujian berlangsung.</p>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    <style>
+                      @keyframes blinker { 50% { opacity: 0; } }
+                      .blink { animation: blinker 1.5s linear infinite; }
+                    </style>
+                    <div class="card my-shadow" id="card-ujian">
                         <div class="card-header p-4">
                             <div class="card-title">
                                 NOMOR:
@@ -434,17 +461,73 @@
         });
 
         document.onmousedown = rtclickcheck;
+        var cardUjian = $('#card-ujian');
+        cardUjian.hide();
+        $('#accordionKamera').hide();
+
         swal.fire({
-            title: 'Peraturan Ujian',
-            html: 'Kerjakan soal dengan serius,<br>jangan nyontek!',
-            // showCancelButton: true,
+            title: 'Protokol Kamera Aktif',
+            html: '<div class="text-left">' +
+                  '<p>Ujian ini menggunakan sistem <b>Pengawasan Kamera Aktif</b>. Sebelum memulai pengerjaan:</p>' +
+                  '<ul>' +
+                  '<li>Mohon klik tombol di bawah lalu pilih <b>Izinkan/Allow</b> pada akses kamera browser Anda.</li>' +
+                  '<li>Aktivitas wajah dan gerakan Anda akan dipantau serta direkam secara real-time oleh sistem AI pengawas.</li>' +
+                  '<li>Jika akses kamera ditolak/diblokir, Anda tidak dapat membuka soal ujian.</li>' +
+                  '</ul>' +
+                  '</div>',
+            icon: 'info',
             confirmButtonColor: '#3085d6',
-            cancelButtonColor: '#d33',
-            confirmButtonText: 'Iya',
+            confirmButtonText: 'Siap, Aktifkan Kamera',
             allowOutsideClick: false
         }).then((result) => {
             if (result.value) {
-                openFullscreen();
+                if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+                    navigator.mediaDevices.getUserMedia({ video: true })
+                    .then(function(stream) {
+                        var video = document.getElementById('webcam-monitor');
+                        video.srcObject = stream;
+                        video.play();
+
+                        $('#accordionKamera').fadeIn();
+                        cardUjian.fadeIn();
+
+                        swal.fire({
+                            toast: true,
+                            position: 'top-end',
+                            icon: 'success',
+                            title: 'Kamera aktif. Selamat mengerjakan!',
+                            showConfirmButton: false,
+                            timer: 3000
+                        });
+
+                        swal.fire({
+                            title: 'Peraturan Ujian',
+                            html: 'Kerjakan soal dengan serius,<br>jangan nyontek!',
+                            confirmButtonColor: '#3085d6',
+                            cancelButtonColor: '#d33',
+                            confirmButtonText: 'Iya',
+                            allowOutsideClick: false
+                        }).then((result) => {
+                            if (result.value) {
+                                openFullscreen();
+                            }
+                        });
+                    })
+                    .catch(function(error) {
+                        swal.fire({
+                            title: "Akses Kamera Ditolak!",
+                            text: "Anda WAJIB mengizinkan akses kamera browser untuk mengikuti ujian ini. Anda akan diarahkan kembali ke dashboard dalam 5 detik.",
+                            icon: "error",
+                            allowOutsideClick: false,
+                            showConfirmButton: false
+                        });
+                        setTimeout(function() {
+                            window.location.href = base_url + 'siswa/cbt';
+                        }, 5000);
+                    });
+                } else {
+                    swal.fire("Error", "Browser atau perangkat Anda tidak mendukung fitur kamera pengawas.", "error");
+                }
             }
         });
 
@@ -1291,7 +1374,7 @@
     }
 
     document.addEventListener("visibilitychange", () => {
-        if (document.hidden && infoJadwal.reset_login === '1') {
+        if (document.hidden && infoJadwal.reset_login == 1) {
             location.href=base_url+"siswa/leavecbt/<?= $jadwal->id_jadwal ?>/<?= $siswa->id_siswa ?>";
         }
     });
