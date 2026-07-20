@@ -56,10 +56,10 @@
 
     <!-- fonts -->
     <link rel="stylesheet" href="<?= base_url() ?>/assets/adminlte/dist/css/poppins.css">
-    <link rel="stylesheet" href="<?= base_url() ?>/assets/adminlte/dist/css/calibri.css">
+    <link rel="stylesheet" href="<?= base_url() ?>/assets/adminlte/dist/css/calibri.css?v=<?= time(); ?>">
 
     <!-- Theme style -->
-    <link rel="stylesheet" href="<?= base_url() ?>/assets/adminlte/dist/css/adminlte.min.css">
+    <link rel="stylesheet" href="<?= base_url() ?>/assets/adminlte/dist/css/adminlte.min.css?v=<?= time(); ?>">
 
     <!-- Custom CSS -->
     <link rel="stylesheet" href="<?= base_url() ?>/assets/app/css/mystyle.css">

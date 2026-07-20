@@ -272,9 +272,6 @@ class Chat extends CI_Controller {
             ->set_output(json_encode($gurus));
     }
 
-    /**
-     * Helper to load tutor contacts relationally
-     */
     private function _get_kontak_guru($username, $tp_id, $smt_id) {
         $siswa = $this->db->where(['username' => $username])->get('master_siswa')->row();
         if (!$siswa) {
@@ -287,29 +284,146 @@ class Chat extends CI_Controller {
             'id_smt' => $smt_id
         ])->get('kelas_siswa')->row();
 
+        // Fallback: If not found in current TP/SMT, try latest class of student
+        if (!$kelas_siswa) {
+            $kelas_siswa = $this->db->where(['id_siswa' => $siswa->id_siswa])
+                ->order_by('id_tp', 'DESC')
+                ->order_by('id_smt', 'DESC')
+                ->get('kelas_siswa')->row();
+        }
+
         if (!$kelas_siswa) {
             return [];
         }
 
-        $student_class_id = $kelas_siswa->id_kelas;
+        $student_class_id = intval($kelas_siswa->id_kelas);
 
-        $this->db->select('DISTINCT(g.id_guru), g.nama_guru, g.no_hp, g.foto, g.id_user');
+        // 1. Get all teachers, auto-linking id_user from users table if master_guru.id_user is NULL/0
+        $this->db->select('g.id_guru, g.nama_guru, g.no_hp, g.foto, COALESCE(NULLIF(g.id_user, 0), u.id) as id_user');
         $this->db->from('master_guru g');
-        $this->db->join('kelas_materi m', 'g.id_guru = m.id_guru', 'left');
-        $this->db->join('kelas_jadwal_materi kjm', 'm.id_materi = kjm.id_materi', 'left');
-        $this->db->join('master_kelas mk', 'mk.guru_id = g.id_guru AND mk.id_kelas = ' . $student_class_id, 'left');
-        
-        $this->db->group_start();
-        $this->db->group_start();
-        $this->db->where('kjm.id_kelas', $student_class_id);
-        $this->db->where('kjm.id_tp', $tp_id);
-        $this->db->where('kjm.id_smt', $smt_id);
-        $this->db->group_end();
-        $this->db->or_where('mk.id_kelas', $student_class_id);
-        $this->db->group_end();
+        $this->db->join('users u', 'g.username = u.username OR g.nip = u.username', 'left');
+        $all_gurus = $this->db->get()->result();
 
-        $this->db->order_by('g.nama_guru', 'ASC');
-        return $this->db->get()->result();
+        $guru_allowed_ids = [];
+
+        // 2. Add Wali Kelas from master_kelas if configured
+        $mk = $this->db->where(['id_kelas' => $student_class_id])->get('master_kelas')->row();
+        if ($mk && !empty($mk->guru_id) && intval($mk->guru_id) > 0) {
+            $guru_allowed_ids[] = intval($mk->guru_id);
+        }
+
+        // Helper closure for unserialize/json_decode fallback
+        $decode_data = function($raw) {
+            if (empty($raw)) return [];
+            $res = @unserialize($raw);
+            if ($res === false || !is_array($res)) {
+                $res = @json_decode($raw, true);
+            }
+            return is_array($res) ? $res : [];
+        };
+
+        // 3. Fetch jabatan_guru mapping for current TP/SMT
+        $this->db->select('id_guru, mapel_kelas, id_kelas');
+        $this->db->from('jabatan_guru');
+        $this->db->group_start();
+        $this->db->where('id_tp', $tp_id);
+        $this->db->where('id_smt', $smt_id);
+        $this->db->or_where('id_tp IS NULL');
+        $this->db->or_where('id_tp', 0);
+        $this->db->group_end();
+        $jabatans = $this->db->get()->result();
+
+        foreach ($jabatans as $jb) {
+            if (intval($jb->id_kelas) === $student_class_id) {
+                $guru_allowed_ids[] = intval($jb->id_guru);
+            }
+            if (!empty($jb->mapel_kelas)) {
+                $mapels = $decode_data($jb->mapel_kelas);
+                foreach ($mapels as $mapel) {
+                    $mapel_arr = is_object($mapel) ? (array)$mapel : $mapel;
+                    if (isset($mapel_arr['kelas']) && intval($mapel_arr['kelas']) === $student_class_id) {
+                        $guru_allowed_ids[] = intval($jb->id_guru);
+                    }
+                    $kelas_mapel = isset($mapel_arr['kelas_mapel']) ? $mapel_arr['kelas_mapel'] : null;
+                    if (is_array($kelas_mapel) || is_object($kelas_mapel)) {
+                        foreach ($kelas_mapel as $km) {
+                            $km_arr = is_object($km) ? (array)$km : $km;
+                            $kls_id = isset($km_arr['kelas']) ? $km_arr['kelas'] : (isset($km_arr['id_kelas']) ? $km_arr['id_kelas'] : $km_arr);
+                            if (intval($kls_id) === $student_class_id) {
+                                $guru_allowed_ids[] = intval($jb->id_guru);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        // 4. Fetch kelas_materi mapping
+        $this->db->select('id_guru, materi_kelas');
+        $this->db->from('kelas_materi');
+        $this->db->where('id_tp', $tp_id);
+        $this->db->where('id_smt', $smt_id);
+        $materis = $this->db->get()->result();
+
+        foreach ($materis as $m) {
+            if (!empty($m->materi_kelas)) {
+                $kls = $decode_data($m->materi_kelas);
+                foreach ($kls as $k) {
+                    $k_id = is_array($k) ? (isset($k['kelas']) ? $k['kelas'] : (isset($k['id_kelas']) ? $k['id_kelas'] : null)) : $k;
+                    if (intval($k_id) === $student_class_id) {
+                        $guru_allowed_ids[] = intval($m->id_guru);
+                        break;
+                    }
+                }
+            }
+        }
+
+        // 5. Fallback: If no guru found yet, check all jabatan_guru records regardless of TP/SMT
+        if (empty($guru_allowed_ids)) {
+            $all_jabatans = $this->db->select('id_guru, mapel_kelas, id_kelas')->get('jabatan_guru')->result();
+            foreach ($all_jabatans as $jb) {
+                if (intval($jb->id_kelas) === $student_class_id) {
+                    $guru_allowed_ids[] = intval($jb->id_guru);
+                }
+                if (!empty($jb->mapel_kelas)) {
+                    $mapels = $decode_data($jb->mapel_kelas);
+                    foreach ($mapels as $mapel) {
+                        $mapel_arr = is_object($mapel) ? (array)$mapel : $mapel;
+                        if (isset($mapel_arr['kelas']) && intval($mapel_arr['kelas']) === $student_class_id) {
+                            $guru_allowed_ids[] = intval($jb->id_guru);
+                        }
+                        $kelas_mapel = isset($mapel_arr['kelas_mapel']) ? $mapel_arr['kelas_mapel'] : null;
+                        if (is_array($kelas_mapel) || is_object($kelas_mapel)) {
+                            foreach ($kelas_mapel as $km) {
+                                $km_arr = is_object($km) ? (array)$km : $km;
+                                $kls_id = isset($km_arr['kelas']) ? $km_arr['kelas'] : (isset($km_arr['id_kelas']) ? $km_arr['id_kelas'] : $km_arr);
+                                if (intval($kls_id) === $student_class_id) {
+                                    $guru_allowed_ids[] = intval($jb->id_guru);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        // Make list of allowed guru IDs unique and filter non-zero values
+        $guru_allowed_ids = array_filter(array_unique($guru_allowed_ids));
+
+        // Filter and return allowed teachers sorted by name, ensuring id_user is valid
+        $teachers = [];
+        foreach ($all_gurus as $g) {
+            if (in_array(intval($g->id_guru), $guru_allowed_ids) && !empty($g->id_user) && intval($g->id_user) > 0) {
+                $teachers[] = $g;
+            }
+        }
+
+        // Sort by name alphabetically
+        usort($teachers, function($a, $b) {
+            return strcmp($a->nama_guru, $b->nama_guru);
+        });
+
+        return $teachers;
     }
 
     /**

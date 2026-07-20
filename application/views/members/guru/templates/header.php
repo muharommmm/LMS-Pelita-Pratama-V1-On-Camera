@@ -61,7 +61,7 @@
 
     <!-- fonts -->
     <link rel="stylesheet" href="<?= base_url() ?>/assets/adminlte/dist/css/poppins.css">
-    <link rel="stylesheet" href="<?= base_url() ?>/assets/adminlte/dist/css/calibri.css">
+    <link rel="stylesheet" href="<?= base_url() ?>/assets/adminlte/dist/css/calibri.css?v=<?= time(); ?>">
     <!--
     <link rel="stylesheet" href="<?= base_url() ?>/assets/adminlte/dist/css/montserrat.css">
     <link rel="stylesheet" href="<?= base_url() ?>/assets/adminlte/dist/css/fonts.css">
@@ -71,7 +71,7 @@
     <link rel="stylesheet" href="<?= base_url() ?>/assets/app/css/show.toast.css">
 
     <!-- Theme style -->
-    <link rel="stylesheet" href="<?= base_url() ?>/assets/adminlte/dist/css/adminlte.min.css">
+    <link rel="stylesheet" href="<?= base_url() ?>/assets/adminlte/dist/css/adminlte.min.css?v=<?= time(); ?>">
 
     <!-- textarea editor -->
     <!-- summernote -->
