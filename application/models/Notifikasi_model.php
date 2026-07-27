@@ -439,11 +439,20 @@ class Notifikasi_model extends CI_Model {
                 $meta = is_array($notif->metadata) ? $notif->metadata : @json_decode($notif->metadata ?? '', true);
                 $pengirim_id = isset($meta['pengirim_id']) ? $meta['pengirim_id'] : null;
                 if ($pengirim_id) {
-                    $unread_chat = $this->db->where([
-                        'penerima_id' => $user_id,
-                        'pengirim_id' => $pengirim_id,
-                        'is_read'     => 0
-                    ])->count_all_results('chat_messages');
+                    if (strpos((string)$pengirim_id, 'komunitas_') === 0) {
+                        $unread_chat = $this->db->where([
+                            'user_id' => $user_id,
+                            'type'    => 'chat_masuk',
+                            'url'     => 'chat?user=' . $pengirim_id,
+                            'is_read' => 0
+                        ])->count_all_results('dashboard_notifications');
+                    } else {
+                        $unread_chat = $this->db->where([
+                            'penerima_id' => $user_id,
+                            'pengirim_id' => $pengirim_id,
+                            'is_read'     => 0
+                        ])->count_all_results('chat_messages');
+                    }
 
                     if ($unread_chat == 0) {
                         $this->markAsRead(isset($notif->id) ? $notif->id : (isset($notif->id_notif) ? $notif->id_notif : 0), $user_id);
@@ -584,11 +593,20 @@ class Notifikasi_model extends CI_Model {
                 $meta = is_array($notif->metadata) ? $notif->metadata : @json_decode($notif->metadata ?? '', true);
                 $pengirim_id = isset($meta['pengirim_id']) ? $meta['pengirim_id'] : null;
                 if ($pengirim_id) {
-                    $unread_chat = $this->db->where([
-                        'penerima_id' => $user_id,
-                        'pengirim_id' => $pengirim_id,
-                        'is_read'     => 0
-                    ])->count_all_results('chat_messages');
+                    if (strpos((string)$pengirim_id, 'komunitas_') === 0) {
+                        $unread_chat = $this->db->where([
+                            'user_id' => $user_id,
+                            'type'    => 'chat_masuk',
+                            'url'     => 'chat?user=' . $pengirim_id,
+                            'is_read' => 0
+                        ])->count_all_results('dashboard_notifications');
+                    } else {
+                        $unread_chat = $this->db->where([
+                            'penerima_id' => $user_id,
+                            'pengirim_id' => $pengirim_id,
+                            'is_read'     => 0
+                        ])->count_all_results('chat_messages');
+                    }
 
                     if ($unread_chat == 0) {
                         $this->markAsRead(isset($notif->id) ? $notif->id : (isset($notif->id_notif) ? $notif->id_notif : 0), $user_id);

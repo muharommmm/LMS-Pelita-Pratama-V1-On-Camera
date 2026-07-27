@@ -62,13 +62,20 @@ class Chat extends CI_Controller {
                     $mk = $this->db->where(['id_kelas' => $kelas_id])->get('master_kelas')->row();
                     if ($mk) {
                         $nama_kelas = $mk->nama_kelas;
+                        $unread_comm = $this->db->where([
+                            'user_id' => $user->id,
+                            'type' => 'chat_masuk',
+                            'url' => 'chat?user=komunitas_' . $kelas_id,
+                            'is_read' => 0
+                        ])->count_all_results('dashboard_notifications');
+
                         // Prepend student's specific class community
                         $kontak[] = (object)[
                             'id_user' => 'komunitas_' . $kelas_id,
                             'nama' => 'Komunitas Kelas ' . $mk->nama_kelas,
                             'role' => 'komunitas',
                             'kelas' => null,
-                            'unread' => 0
+                            'unread' => $unread_comm
                         ];
                     }
                 }
@@ -148,12 +155,19 @@ class Chat extends CI_Controller {
                         $this->db->where_in('id_kelas', $class_ids);
                         $kelas_taught = $this->db->get('master_kelas')->result();
                         foreach ($kelas_taught as $kt) {
+                            $unread_comm = $this->db->where([
+                                'user_id' => $user->id,
+                                'type' => 'chat_masuk',
+                                'url' => 'chat?user=komunitas_' . $kt->id_kelas,
+                                'is_read' => 0
+                            ])->count_all_results('dashboard_notifications');
+
                             $kontak[] = (object)[
                                 'id_user' => 'komunitas_' . $kt->id_kelas,
                                 'nama' => 'Komunitas Kelas ' . $kt->nama_kelas,
                                 'role' => 'komunitas',
                                 'kelas' => null,
-                                'unread' => 0
+                                'unread' => $unread_comm
                             ];
                         }
 
@@ -181,12 +195,19 @@ class Chat extends CI_Controller {
             // Admin: Prepend all class communities
             $all_kelas = $this->db->get('master_kelas')->result();
             foreach ($all_kelas as $ak) {
+                $unread_comm = $this->db->where([
+                    'user_id' => $user->id,
+                    'type' => 'chat_masuk',
+                    'url' => 'chat?user=komunitas_' . $ak->id_kelas,
+                    'is_read' => 0
+                ])->count_all_results('dashboard_notifications');
+
                 $kontak[] = (object)[
                     'id_user' => 'komunitas_' . $ak->id_kelas,
                     'nama' => 'Komunitas Kelas ' . $ak->nama_kelas,
                     'role' => 'komunitas',
                     'kelas' => null,
-                    'unread' => 0
+                    'unread' => $unread_comm
                 ];
             }
 
@@ -509,6 +530,14 @@ class Chat extends CI_Controller {
             $this->chat_model->tandai_dibaca($user->id, $lawan_bicara_id);
         }
 
+        // Mark as read for community chat
+        if ($is_komunitas && $id_kelas_komunitas) {
+            $this->db->where('user_id', $user->id)
+                     ->where('type', 'chat_masuk')
+                     ->where('url', 'chat?user=komunitas_' . $id_kelas_komunitas)
+                     ->update('dashboard_notifications', ['is_read' => 1]);
+        }
+
         // Logika Fallback WhatsApp (3 Hari)
         $tampilkan_tombol_wa = false;
         $wa_number = null;
@@ -642,6 +671,83 @@ class Chat extends CI_Controller {
                     ]);
                 } catch (Throwable $e) {
                     log_message('error', 'Gagal mengirim notifikasi chat: ' . $e->getMessage());
+                }
+            }
+
+            // Send dashboard notification if it's a community chat
+            if ($id_kelas_komunitas) {
+                try {
+                    $this->load->model('Notifikasi_model', 'notif_m');
+                    $this->load->model('Dashboard_model', 'dashboard');
+                    $tp = $this->dashboard->getTahunActive();
+                    $smt = $this->dashboard->getSemesterActive();
+
+                    $sender_name = 'Seseorang';
+                    if ($data['pengirim_role'] == 'siswa') {
+                        $sender = $this->db->where(['username' => $user->username])->get('master_siswa')->row();
+                        if ($sender) $sender_name = $sender->nama;
+                    } elseif ($data['pengirim_role'] == 'guru') {
+                        $sender = $this->db->where(['id_user' => $user->id])->get('master_guru')->row();
+                        if ($sender) $sender_name = $sender->nama_guru;
+                    } else {
+                        $sender_name = trim($user->first_name . ' ' . $user->last_name) ?: $user->username;
+                    }
+
+                    $mk = $this->db->where('id_kelas', $id_kelas_komunitas)->get('master_kelas')->row();
+                    $class_name = $mk ? $mk->nama_kelas : 'Kelas';
+
+                    // Get all students in the class
+                    $this->db->select('u.id as id_user');
+                    $this->db->from('master_siswa s');
+                    $this->db->join('kelas_siswa ks', 's.id_siswa = ks.id_siswa AND ks.id_tp = ' . $tp->id_tp . ' AND ks.id_smt = ' . $smt->id_smt, 'inner');
+                    $this->db->join('users u', 's.username = u.username', 'inner');
+                    $this->db->where('ks.id_kelas', $id_kelas_komunitas);
+                    $students = $this->db->get()->result();
+
+                    foreach ($students as $student) {
+                        if ($student->id_user == $user->id) continue;
+                        $this->notif_m->createNotifikasi([
+                            'user_id'  => $student->id_user,
+                            'role'     => 'siswa',
+                            'type'     => 'chat_masuk',
+                            'title'    => 'Komunitas ' . $class_name . ': ' . $sender_name,
+                            'body'     => substr($data['pesan'], 0, 100),
+                            'url'      => 'chat?user=komunitas_' . $id_kelas_komunitas,
+                            'metadata' => ['komunitas_id' => $id_kelas_komunitas, 'pengirim_id' => 'komunitas_' . $id_kelas_komunitas]
+                        ]);
+                    }
+
+                    // Get homeroom & subject teachers of the class to notify them as well
+                    $teacher_user_ids = [];
+                    if ($mk && $mk->guru_id) {
+                        $wali = $this->db->where('id_guru', $mk->guru_id)->get('master_guru')->row();
+                        if ($wali && $wali->id_user) {
+                            $teacher_user_ids[] = $wali->id_user;
+                        }
+                    }
+                    $jabs = $this->db->where('id_kelas', $id_kelas_komunitas)->get('jabatan_guru')->result();
+                    foreach ($jabs as $j) {
+                        $t_guru = $this->db->where('id_guru', $j->id_guru)->get('master_guru')->row();
+                        if ($t_guru && $t_guru->id_user) {
+                            $teacher_user_ids[] = $t_guru->id_user;
+                        }
+                    }
+                    $teacher_user_ids = array_filter(array_unique($teacher_user_ids));
+
+                    foreach ($teacher_user_ids as $t_uid) {
+                        if ($t_uid == $user->id) continue;
+                        $this->notif_m->createNotifikasi([
+                            'user_id'  => $t_uid,
+                            'role'     => 'guru',
+                            'type'     => 'chat_masuk',
+                            'title'    => 'Komunitas ' . $class_name . ': ' . $sender_name,
+                            'body'     => substr($data['pesan'], 0, 100),
+                            'url'      => 'chat?user=komunitas_' . $id_kelas_komunitas,
+                            'metadata' => ['komunitas_id' => $id_kelas_komunitas, 'pengirim_id' => 'komunitas_' . $id_kelas_komunitas]
+                        ]);
+                    }
+                } catch (Throwable $e) {
+                    log_message('error', 'Gagal mengirim notifikasi chat komunitas: ' . $e->getMessage());
                 }
             }
 
