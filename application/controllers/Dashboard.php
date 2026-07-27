@@ -153,6 +153,13 @@
             $data = $this->dashboard->getAktivitasGuru($user->id, $guru->id_guru);
             $output = [];
             foreach ($data as $row) {
+                $waktu_ts = strtotime($row->waktu ?? '');
+                if (!$waktu_ts || $row->waktu == '0000-00-00 00:00:00') {
+                    $waktu_str = 'Baru saja';
+                } else {
+                    $waktu_str = date('d M Y, H:i', $waktu_ts);
+                }
+
                 $output[] = [
                     'id'           => $row->id,
                     'tipe'         => $row->tipe,
@@ -162,7 +169,7 @@
                     'id_mapel'     => isset($row->id_mapel) ? $row->id_mapel : 0,
                     'id_siswa'     => isset($row->id_siswa) ? $row->id_siswa : 0,
                     'id_kelas'     => isset($row->id_kelas) ? $row->id_kelas : 0,
-                    'waktu'        => date('d M Y, H:i', strtotime($row->waktu)),
+                    'waktu'        => $waktu_str,
                     'is_read'      => $row->is_read == 1 ? true : false
                 ];
             }

@@ -97,13 +97,14 @@
                 b.bank_mapel_id as id_mapel,
                 n.id_siswa as id_siswa,
                 ks.id_kelas as id_kelas,
-                n.time_create as waktu,
+                COALESCE(NULLIF(d.selesai, '0000-00-00 00:00:00'), NULLIF(d.mulai, '0000-00-00 00:00:00'), NULLIF(n.time_create, '0000-00-00 00:00:00'), NOW()) as waktu,
                 0 as is_read
             FROM cbt_nilai n
             JOIN cbt_jadwal j ON n.id_jadwal = j.id_jadwal
             JOIN cbt_bank_soal b ON j.id_bank = b.id_bank
             JOIN master_siswa s ON n.id_siswa = s.id_siswa
             LEFT JOIN kelas_siswa ks ON (s.id_siswa = ks.id_siswa AND ks.id_tp = j.id_tp AND ks.id_smt = j.id_smt)
+            LEFT JOIN cbt_durasi_siswa d ON (d.id_siswa = n.id_siswa AND d.id_jadwal = n.id_jadwal)
             WHERE b.bank_guru_id = ?
               AND b.jml_esai > 0
               AND (n.dikoreksi = 0 OR n.dikoreksi IS NULL)
