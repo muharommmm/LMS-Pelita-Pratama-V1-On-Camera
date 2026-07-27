@@ -126,41 +126,45 @@ class Honor_model extends CI_Model {
                 $mapel_names[$m->id_mapel] = $m->nama_mapel;
             }
 
-            // Fetch absensi_siswa details for this tutor to resolve offline/online classes
+            // Group absensi_siswa records by session to support merged classes display
             $absensi_map = [];
-            $this->db->select('class_id, mapel_id, date, jenis_kegiatan');
+            $this->db->select('MIN(class_id) as min_class_id, GROUP_CONCAT(DISTINCT class_id) as all_class_ids, mapel_id, date, jenis_kegiatan');
             $this->db->from('absensi_siswa');
             $this->db->where('tutor_id_input', $tutor_id);
-            $abs_list = $this->db->get()->result();
-            foreach ($abs_list as $abs) {
-                $jk = !empty($abs->jenis_kegiatan) ? $abs->jenis_kegiatan : 'offline';
-                $hash = crc32($abs->class_id . '-' . $abs->mapel_id . '-' . $abs->date . '-' . $jk) & 0x7FFFFFFF;
+            $this->db->group_by(['mapel_id', 'date', 'time', 'jenis_kegiatan']);
+            $session_groups = $this->db->get()->result();
+
+            foreach ($session_groups as $group) {
+                $jk = !empty($group->jenis_kegiatan) ? $group->jenis_kegiatan : 'offline';
+                $hash = crc32($group->min_class_id . '-' . $group->mapel_id . '-' . $group->date . '-' . $jk) & 0x7FFFFFFF;
                 $absensi_map[$hash] = [
-                    'class_id' => $abs->class_id,
-                    'mapel_id' => $abs->mapel_id
+                    'class_ids' => explode(',', $group->all_class_ids),
+                    'mapel_id'  => $group->mapel_id
                 ];
-                // Also add fallback key without jenis_kegiatan for backward compatibility
-                $old_hash = crc32($abs->class_id . '-' . $abs->mapel_id . '-' . $abs->date) & 0x7FFFFFFF;
+
+                // Backward compatibility old hash (without jenis_kegiatan)
+                $old_hash = crc32($group->min_class_id . '-' . $group->mapel_id . '-' . $group->date) & 0x7FFFFFFF;
                 if (!isset($absensi_map[$old_hash])) {
                     $absensi_map[$old_hash] = [
-                        'class_id' => $abs->class_id,
-                        'mapel_id' => $abs->mapel_id
+                        'class_ids' => explode(',', $group->all_class_ids),
+                        'mapel_id'  => $group->mapel_id
                     ];
                 }
             }
 
             foreach ($records as $rec) {
+                $class_ids = [];
                 $class_id = null;
                 $mapel_id = null;
 
                 // 1. Try absensi map first (for ANY type, since absensi_siswa can create any type manually)
                 if (isset($absensi_map[$rec->reference_id])) {
-                    $class_id = $absensi_map[$rec->reference_id]['class_id'];
+                    $class_ids = $absensi_map[$rec->reference_id]['class_ids'];
                     $mapel_id = $absensi_map[$rec->reference_id]['mapel_id'];
                 }
 
                 // 2. Try absensi_siswa DB fallback for ANY type
-                if (!$class_id && !$mapel_id) {
+                if (empty($class_ids) && !$mapel_id) {
                     $this->db->select('class_id, mapel_id');
                     $this->db->from('absensi_siswa');
                     $this->db->where('tutor_id_input', $tutor_id);
@@ -186,7 +190,7 @@ class Honor_model extends CI_Model {
                 }
 
                 // 3. Type specific fallback
-                if (!$class_id && !$mapel_id) {
+                if (empty($class_ids) && !$class_id && !$mapel_id) {
                     if ($rec->type == 'check_task') {
                         $this->db->select('kelas_materi.id_mapel, kelas_siswa.id_kelas');
                         $this->db->from('log_materi');
@@ -216,7 +220,17 @@ class Honor_model extends CI_Model {
                     }
                 }
 
-                $rec->nama_kelas = isset($class_names[$class_id]) ? $class_names[$class_id] : '-';
+                if (!empty($class_ids)) {
+                    $names = [];
+                    foreach ($class_ids as $cid) {
+                        if (isset($class_names[$cid])) {
+                            $names[] = $class_names[$cid];
+                        }
+                    }
+                    $rec->nama_kelas = implode(', ', $names);
+                } else {
+                    $rec->nama_kelas = isset($class_names[$class_id]) ? $class_names[$class_id] : '-';
+                }
                 $rec->nama_mapel = isset($mapel_names[$mapel_id]) ? $mapel_names[$mapel_id] : '-';
             }
         }
