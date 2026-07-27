@@ -139,10 +139,28 @@ $foto_profil = $siswa->foto ? base_url($siswa->foto) : base_url('assets/img/sisw
     <!-- Main Content Canvas -->
     <main class="flex-1 p-container-padding-mobile md:p-container-padding-desktop pb-24 lg:pb-container-padding-desktop">
         <div class="max-w-4xl mx-auto space-y-6">
-            <!-- Header -->
-            <div>
-                <h2 class="text-2xl font-bold font-headline text-primary">Rekapitulasi Kehadiran</h2>
-                <p class="text-xs text-on-surface-variant mt-1">Daftar kehadiran tatap muka harian serta log aktivitas pembelajaran online Anda.</p>
+            <!-- Header with Month/Year Filter -->
+            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                <div>
+                    <h2 class="text-2xl font-bold font-headline text-primary">Rekapitulasi Kehadiran</h2>
+                    <p class="text-xs text-on-surface-variant mt-1">Daftar kehadiran tatap muka harian serta log aktivitas pembelajaran online Anda.</p>
+                </div>
+                <form method="GET" action="" class="flex gap-2 w-full sm:w-auto">
+                    <select name="bulan" onchange="this.form.submit()" class="text-xs rounded-lg border-outline-variant bg-surface text-on-surface focus:border-primary focus:ring-primary">
+                        <?php for ($m = 1; $m <= 12; $m++) : 
+                            $m_pad = str_pad($m, 2, '0', STR_PAD_LEFT);
+                        ?>
+                            <option value="<?= $m_pad ?>" <?= $m_pad == $bulan ? 'selected' : '' ?>><?= $arrBulan[$m] ?></option>
+                        <?php endfor; ?>
+                    </select>
+                    <select name="tahun" onchange="this.form.submit()" class="text-xs rounded-lg border-outline-variant bg-surface text-on-surface focus:border-primary focus:ring-primary">
+                        <?php 
+                        $cur_yr = date('Y');
+                        for ($y = $cur_yr - 2; $y <= $cur_yr + 1; $y++) : ?>
+                            <option value="<?= $y ?>" <?= $y == $tahun ? 'selected' : '' ?>><?= $y ?></option>
+                        <?php endfor; ?>
+                    </select>
+                </form>
             </div>
 
             <!-- Kehadiran Hari Ini -->
@@ -210,12 +228,14 @@ $foto_profil = $siswa->foto ? base_url($siswa->foto) : base_url('assets/img/sisw
                     <?php else : ?>
                         <div class="space-y-4">
                             <?php
+                            $is_current_month = ($tahun == date('Y') && $bulan == date('m'));
                             $tanggal_hari_ini = (int)date('d');
                             foreach ($arrtgl as $tgl) :
                                 $tgl_skrg = $tahun . '-' . $bulan . '-' . $tgl;
                                 $hari_n   = (int)date('N', strtotime($tgl_skrg));
                                 $day_d    = (int)date('d', strtotime($tgl_skrg));
-                                if ($hari_n === 7 || $day_d > $tanggal_hari_ini) continue;
+                                if ($hari_n === 7) continue;
+                                if ($is_current_month && $day_d > $tanggal_hari_ini) continue;
 
                                 $week    = (int)ceil($day_d / 7);
                                 $is_odd  = ($week % 2 === 1);

@@ -25,8 +25,9 @@
 
         $today  = date("Y-m-d");
         $day_n  = (int)date("N"); // 1=Mon ... 7=Sun
-        $bulan  = date("m");
-        $tahun  = date("Y");
+        $bulan  = $this->input->get('bulan', true) ? $this->input->get('bulan', true) : date("m");
+        $tahun  = $this->input->get('tahun', true) ? $this->input->get('tahun', true) : date("Y");
+        $bulan  = str_pad($bulan, 2, '0', STR_PAD_LEFT);
 
         // ---- 1. Jadwal Fleksibel (new schedule system) ----
         $jadwals_flex = $this->kelas->getJadwalFleksibel($siswa->id_kelas, $tp->id_tp, $smt->id_smt);
@@ -73,7 +74,7 @@
         $online_logs   = [];   // auto-sync dari penyelesaian materi/tugas
         foreach ($absensi_official as $row) {
             $jenis = isset($row->jenis_kegiatan) ? $row->jenis_kegiatan : 'offline';
-            if ($jenis === 'online') {
+            if ($jenis === 'online' && $row->method !== 'manual_tutor') {
                 $online_logs[$row->date][$row->mapel_id] = $row;
             } else {
                 $official_logs[$row->date][$row->mapel_id] = $row;
