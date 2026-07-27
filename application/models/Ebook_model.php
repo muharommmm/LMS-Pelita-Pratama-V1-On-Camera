@@ -75,9 +75,12 @@ class Ebook_model extends CI_Model {
     }
 
     /**
-     * Get ebooks for tutor view based on their taught classes and subjects
+     * Get ebooks for tutor view based on their taught subjects
      */
     public function get_ebooks_for_tutor($class_ids, $mapel_ids) {
+        if (empty($mapel_ids)) {
+            return [];
+        }
         $this->db->select('ebooks.*, master_kelas.nama_kelas, master_mapel.nama_mapel, master_ekstra.nama_ekstra, users.first_name, users.last_name');
         $this->db->from('ebooks');
         $this->db->join('master_kelas', 'master_kelas.id_kelas = ebooks.class_id', 'left');
@@ -85,7 +88,7 @@ class Ebook_model extends CI_Model {
         $this->db->join('master_ekstra', 'master_ekstra.id_ekstra = ebooks.ekstra_id', 'left');
         $this->db->join('users', 'users.id = ebooks.created_by', 'left');
         
-        // Show all ebooks without strict class filtering
+        $this->db->where_in('ebooks.mapel_id', $mapel_ids);
         $this->db->order_by('ebooks.created_at', 'DESC');
         return $this->db->get()->result();
     }

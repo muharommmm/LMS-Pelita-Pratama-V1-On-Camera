@@ -28,6 +28,43 @@ class Notifikasi_model extends CI_Model {
      * @return bool
      */
     public function createNotifikasi($data) {
+        $meta_str = isset($data['metadata']) ? (is_array($data['metadata']) ? json_encode($data['metadata']) : $data['metadata']) : null;
+        
+        // Prevent duplicate unread notification for the same user, type & assignment (id_materi)
+        if ($data['type'] === 'nilai_keluar' || ($meta_str && strpos($meta_str, 'id_materi') !== false)) {
+            $meta_arr = is_array($data['metadata'] ?? null) ? $data['metadata'] : @json_decode($meta_str ?? '', true);
+            $id_materi = isset($meta_arr['id_materi']) ? $meta_arr['id_materi'] : null;
+
+            if ($id_materi) {
+                $unreads = $this->db->where('user_id', $data['user_id'])
+                    ->where('type', $data['type'])
+                    ->where('is_read', 0)
+                    ->get('dashboard_notifications')->result();
+
+                $existing = null;
+                foreach ($unreads as $u) {
+                    $u_meta = is_array($u->metadata) ? $u->metadata : @json_decode($u->metadata ?? '', true);
+                    if (isset($u_meta['id_materi']) && (string)$u_meta['id_materi'] === (string)$id_materi) {
+                        $existing = $u;
+                        break;
+                    }
+                }
+
+                if ($existing) {
+                    $pk_col = $this->db->field_exists('id_notif', 'dashboard_notifications') ? 'id_notif' : 'id';
+                    $update_data = [
+                        'title'      => $data['title'],
+                        'body'       => isset($data['body']) ? $data['body'] : null,
+                        'url'        => isset($data['url']) ? $data['url'] : null,
+                        'created_at' => date('Y-m-d H:i:s'),
+                        'metadata'   => $meta_str
+                    ];
+                    $this->db->where($pk_col, $existing->$pk_col)->update('dashboard_notifications', $update_data);
+                    return true;
+                }
+            }
+        }
+
         $insert = [
             'user_id'    => $data['user_id'],
             'role'       => $data['role'],
@@ -37,7 +74,7 @@ class Notifikasi_model extends CI_Model {
             'url'        => isset($data['url']) ? $data['url'] : null,
             'is_read'    => 0,
             'created_at' => date('Y-m-d H:i:s'),
-            'metadata'   => isset($data['metadata']) ? (is_array($data['metadata']) ? json_encode($data['metadata']) : $data['metadata']) : null,
+            'metadata'   => $meta_str,
         ];
         return $this->db->insert('dashboard_notifications', $insert);
     }
@@ -76,7 +113,40 @@ class Notifikasi_model extends CI_Model {
      * @param int $user_id Validasi kepemilikan
      */
     public function markAsRead($id, $user_id) {
-        $this->db->where('id', $id)->where('user_id', $user_id);
+        $pk_col = $this->db->field_exists('id_notif', 'dashboard_notifications') ? 'id_notif' : 'id';
+        $notif = $this->db->where($pk_col, $id)->where('user_id', $user_id)->get('dashboard_notifications')->row();
+
+        $this->db->where($pk_col, $id)->where('user_id', $user_id);
+        $res = $this->db->update('dashboard_notifications', ['is_read' => 1]);
+
+        if ($notif && ($notif->type === 'nilai_keluar' || !empty($notif->metadata))) {
+            $meta = is_array($notif->metadata) ? $notif->metadata : @json_decode($notif->metadata ?? '', true);
+            $id_materi = isset($meta['id_materi']) ? $meta['id_materi'] : null;
+            if ($id_materi) {
+                $unreads = $this->db->where('user_id', $user_id)
+                    ->where('type', 'nilai_keluar')
+                    ->where('is_read', 0)
+                    ->get('dashboard_notifications')->result();
+
+                foreach ($unreads as $u) {
+                    $u_meta = is_array($u->metadata) ? $u->metadata : @json_decode($u->metadata ?? '', true);
+                    if (isset($u_meta['id_materi']) && (string)$u_meta['id_materi'] === (string)$id_materi) {
+                        $this->db->where($pk_col, $u->$pk_col)->update('dashboard_notifications', ['is_read' => 1]);
+                    }
+                }
+            }
+        }
+
+        return $res;
+    }
+
+    /**
+     * Clear all unread grade notifications for user
+     */
+    public function clearNilaiNotifications($user_id) {
+        $this->db->where('user_id', $user_id);
+        $this->db->where('type', 'nilai_keluar');
+        $this->db->where('is_read', 0);
         return $this->db->update('dashboard_notifications', ['is_read' => 1]);
     }
 
@@ -320,7 +390,7 @@ class Notifikasi_model extends CI_Model {
                     'color'    => 'info',
                     'title'    => 'Chat dari ' . $nama,
                     'body'     => substr($chat->pesan, 0, 80) . (strlen($chat->pesan) > 80 ? '...' : ''),
-                    'url'      => 'chat',
+                    'url'      => 'chat?user=' . $chat->pengirim_id,
                     'age'      => $chat->created_at,
                     'is_read'  => 0,
                 ];
@@ -364,6 +434,24 @@ class Notifikasi_model extends CI_Model {
         // 4. Stored notifications (PHP-driven, dari createNotifikasi() di Controller lain)
         $stored = $this->getNotifikasiByUser($user_id, 10, true);
         foreach ($stored as $notif) {
+            $url = $notif->url;
+            if ($notif->type === 'chat_masuk') {
+                $meta = is_array($notif->metadata) ? $notif->metadata : @json_decode($notif->metadata ?? '', true);
+                $pengirim_id = isset($meta['pengirim_id']) ? $meta['pengirim_id'] : null;
+                if ($pengirim_id) {
+                    $unread_chat = $this->db->where([
+                        'penerima_id' => $user_id,
+                        'pengirim_id' => $pengirim_id,
+                        'is_read'     => 0
+                    ])->count_all_results('chat_messages');
+
+                    if ($unread_chat == 0) {
+                        $this->markAsRead(isset($notif->id) ? $notif->id : (isset($notif->id_notif) ? $notif->id_notif : 0), $user_id);
+                        continue;
+                    }
+                    $url = 'chat?user=' . $pengirim_id;
+                }
+            }
             $items[] = [
                 'type'     => $notif->type,
                 'icon'     => $this->getIcon($notif->type),
@@ -371,7 +459,7 @@ class Notifikasi_model extends CI_Model {
                 'color'    => $this->getColor($notif->type),
                 'title'    => $notif->title,
                 'body'     => $notif->body,
-                'url'      => $notif->url,
+                'url'      => $url,
                 'age'      => $notif->created_at,
                 'is_read'  => (int)$notif->is_read,
                 'id'       => isset($notif->id_notif) ? $notif->id_notif : (isset($notif->id) ? $notif->id : null),
@@ -431,7 +519,7 @@ class Notifikasi_model extends CI_Model {
                 'color'    => $color,
                 'title'    => 'Tugas: ' . $t->judul_materi,
                 'body'     => 'Oleh ' . ($t->nama_guru ?: 'Guru') . ' — ' . $badge,
-                'url'      => 'siswa/tugas',
+                'url'      => 'siswa/bukaTugas/' . $t->id_materi . '/0',
                 'age'      => $t->deadline,
                 'is_read'  => 0,
                 'badge'    => $badge,
@@ -448,7 +536,7 @@ class Notifikasi_model extends CI_Model {
                 'color'    => 'success',
                 'title'    => 'Materi baru: ' . $m->judul_materi,
                 'body'     => 'Oleh ' . ($m->nama_guru ?: 'Guru') . ' — Belum kamu buka',
-                'url'      => 'siswa/materi',
+                'url'      => 'siswa/bukaMateri/' . $m->id_materi . '/0',
                 'age'      => $m->created_on,
                 'is_read'  => 0,
             ];
@@ -464,16 +552,51 @@ class Notifikasi_model extends CI_Model {
                 'color'    => 'info',
                 'title'    => 'Pesan dari ' . ($chat->nama_pengirim ?: 'Seseorang'),
                 'body'     => substr($chat->pesan, 0, 80) . (strlen($chat->pesan) > 80 ? '...' : ''),
-                'url'      => 'chat',
+                'url'      => 'chat?user=' . $chat->pengirim_id,
                 'age'      => $chat->created_at,
                 'is_read'  => 0,
             ];
         }
 
         // 4. Stored notifications untuk siswa
-        $stored = $this->getNotifikasiByUser($user_id, 10, true);
+        $stored = $this->getNotifikasiByUser($user_id, 15, true);
+        $seen_nilai_materi = [];
         foreach ($stored as $notif) {
             if (in_array($notif->type, ['tugas_baru', 'materi_baru'])) continue;
+            $url = $notif->url;
+            if ($notif->type === 'nilai_keluar') {
+                $meta = is_array($notif->metadata) ? $notif->metadata : @json_decode($notif->metadata ?? '', true);
+                $id_materi = isset($meta['id_materi']) ? (string)$meta['id_materi'] : null;
+                if ($id_materi) {
+                    if (isset($seen_nilai_materi[$id_materi])) {
+                        $pk_id = isset($notif->id_notif) ? $notif->id_notif : (isset($notif->id) ? $notif->id : 0);
+                        if ($pk_id) {
+                            $pk_col = $this->db->field_exists('id_notif', 'dashboard_notifications') ? 'id_notif' : 'id';
+                            $this->db->where($pk_col, $pk_id)->where('user_id', $user_id)->update('dashboard_notifications', ['is_read' => 1]);
+                        }
+                        continue;
+                    }
+                    $seen_nilai_materi[$id_materi] = true;
+                }
+                $url = 'siswa/hasil';
+            }
+            if ($notif->type === 'chat_masuk') {
+                $meta = is_array($notif->metadata) ? $notif->metadata : @json_decode($notif->metadata ?? '', true);
+                $pengirim_id = isset($meta['pengirim_id']) ? $meta['pengirim_id'] : null;
+                if ($pengirim_id) {
+                    $unread_chat = $this->db->where([
+                        'penerima_id' => $user_id,
+                        'pengirim_id' => $pengirim_id,
+                        'is_read'     => 0
+                    ])->count_all_results('chat_messages');
+
+                    if ($unread_chat == 0) {
+                        $this->markAsRead(isset($notif->id) ? $notif->id : (isset($notif->id_notif) ? $notif->id_notif : 0), $user_id);
+                        continue;
+                    }
+                    $url = 'chat?user=' . $pengirim_id;
+                }
+            }
             $items[] = [
                 'type'     => $notif->type,
                 'icon'     => $this->getIcon($notif->type),
@@ -481,7 +604,7 @@ class Notifikasi_model extends CI_Model {
                 'color'    => $this->getColor($notif->type),
                 'title'    => $notif->title,
                 'body'     => $notif->body,
-                'url'      => $notif->url,
+                'url'      => $url,
                 'age'      => $notif->created_at,
                 'is_read'  => (int)$notif->is_read,
                 'id'       => isset($notif->id_notif) ? $notif->id_notif : (isset($notif->id) ? $notif->id : null),

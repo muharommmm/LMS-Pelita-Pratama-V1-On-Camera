@@ -70,8 +70,21 @@ class Ebooks extends CI_Controller {
                         foreach ($mapels as $mapel) {
                             $mapel_arr = is_object($mapel) ? (array)$mapel : $mapel;
                             if (isset($mapel_arr['id_mapel'])) {
-                                $tutor_mapels[$mapel_arr['id_mapel']] = $mapel_arr['nama_mapel'];
+                                $tutor_mapels[$mapel_arr['id_mapel']] = isset($mapel_arr['nama_mapel']) ? $mapel_arr['nama_mapel'] : 'Mapel ' . $mapel_arr['id_mapel'];
                             }
+                        }
+                    }
+                }
+            }
+
+            // Fallback: check master_guru mapel_kelas if empty
+            if (empty($tutor_mapels) && isset($guru->mapel_kelas) && !empty($guru->mapel_kelas)) {
+                $mapels = @unserialize($guru->mapel_kelas);
+                if (is_array($mapels)) {
+                    foreach ($mapels as $mapel) {
+                        $mapel_arr = is_object($mapel) ? (array)$mapel : $mapel;
+                        if (isset($mapel_arr['id_mapel'])) {
+                            $tutor_mapels[$mapel_arr['id_mapel']] = isset($mapel_arr['nama_mapel']) ? $mapel_arr['nama_mapel'] : 'Mapel ' . $mapel_arr['id_mapel'];
                         }
                     }
                 }

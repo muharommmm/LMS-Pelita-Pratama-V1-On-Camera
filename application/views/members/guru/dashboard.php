@@ -850,7 +850,7 @@
                               title = 'Tugas: ' + item.judul;
                               body = item.nama_siswa + ' mengumpulkan tugas.';
                               icon = '<i class="fas fa-book-open text-blue-500"></i>';
-                              url = 'kelasstatus';
+                              url = 'kelasstatus?id_materi=' + (item.id_referensi || '') + '&id_mapel=' + (item.id_mapel || '') + '&id_siswa=' + (item.id_siswa || '') + '&id_kelas=' + (item.id_kelas || '');
                           } else if (item.tipe === 'materi') {
                               title = 'Materi Selesai: ' + item.judul;
                               body = item.nama_siswa + ' telah menyelesaikan materi/catatan.';
@@ -865,7 +865,7 @@
                               title = item.judul;
                               body = 'Pesan dari: ' + item.nama_siswa;
                               icon = '<i class="fas fa-comments text-indigo-500"></i>';
-                              url = 'chat';
+                              url = 'chat?user=' + (item.id_referensi || '');
                           }
                           var feedItem = {
                               title: title,

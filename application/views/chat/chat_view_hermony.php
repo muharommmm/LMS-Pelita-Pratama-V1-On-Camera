@@ -479,8 +479,26 @@ $(document).ready(function() {
         loadChatHistory();
     });
 
-    // Select first contact
-    if ($('#daftar-kontak .kontak-item').length > 0) {
+    // Select target contact from URL or default to first contact
+    const urlParams = new URLSearchParams(window.location.search);
+    const targetUser = urlParams.get('user');
+    var targetContact = null;
+    if (targetUser) {
+        $('#daftar-kontak .kontak-item').each(function() {
+            var id = $(this).data('id') || $(this).attr('data-id');
+            if (String(id) === String(targetUser)) {
+                targetContact = $(this);
+                return false;
+            }
+        });
+    }
+
+    if (targetContact && targetContact.length > 0) {
+        targetContact.click();
+        if (targetContact[0] && targetContact[0].scrollIntoView) {
+            targetContact[0].scrollIntoView({ block: 'nearest' });
+        }
+    } else if ($('#daftar-kontak .kontak-item').length > 0) {
         $('#daftar-kontak .kontak-item').first().click();
     } else {
         $('#judul-chat-room').text('Tidak ada kontak');

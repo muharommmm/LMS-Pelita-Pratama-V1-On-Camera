@@ -75,6 +75,14 @@ class Chat_model extends CI_Model {
         $this->db->where('pengirim_id', $lawan_bicara_id);
         $this->db->where('penerima_id', $user_id);
         $this->db->where('is_read', 0);
-        return $this->db->update('chat_messages', ['is_read' => 1]);
+        $update_msg = $this->db->update('chat_messages', ['is_read' => 1]);
+
+        // Also mark corresponding chat notifications as read in dashboard_notifications
+        $this->db->where('user_id', $user_id);
+        $this->db->where('type', 'chat_masuk');
+        $this->db->where('is_read', 0);
+        $this->db->update('dashboard_notifications', ['is_read' => 1]);
+
+        return $update_msg;
     }
 }

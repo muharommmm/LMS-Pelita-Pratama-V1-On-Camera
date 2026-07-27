@@ -247,6 +247,12 @@
     var styleNormal = ' data-fill-color="ffffff" data-t="s" data-a-v="middle" data-a-h="center" data-b-a-s="thin" data-f-bold="false"';
     var styleNama = ' data-fill-color="ffffff" data-t="s" data-a-v="middle" data-b-a-s="thin" data-f-bold="false"';
 
+    const urlParams = new URLSearchParams(window.location.search);
+    const paramMateri = urlParams.get('id_materi');
+    const paramMapel  = urlParams.get('id_mapel');
+    const paramSiswa  = urlParams.get('id_siswa');
+    const paramKelas  = urlParams.get('id_kelas');
+
     $(document).ready(function () {
         form = $('#formselect');
         var dropMapel = $('#dropdown-mapel');
@@ -272,6 +278,9 @@
                     arrKelasMateri = response.materi;
                     arrKelasTugas = response.tugas;
                     createDropdownKelas(response.kelas);
+                    if (paramMateri) {
+                        autoSelectTargetMateri(paramMateri, paramKelas);
+                    }
                 }
             });
         });
@@ -290,10 +299,13 @@
         });
 
         $('#daftarModal').on('show.bs.modal', function (e) {
-            var key = $(e.relatedTarget).data('key');
+            var key = e.relatedTarget ? $(e.relatedTarget).data('key') : $(this).data('key');
+            if (key === undefined || key === null) {
+                key = $(this).data('key');
+            }
             var konten = $('#konten-hasil');
-            //console.log(resultAll[key]);
-            var val = resultAll[key];
+            var val = resultAll ? resultAll[key] : null;
+            if (!val) return;
             var html = '';
             $('#daftarLabel').text('Hasil Siswa ' + val.nama);
             konten.html(html);
@@ -416,10 +428,83 @@
             });
         });
 
-        //if (dropGuru.val()!= '') dropGuru.change();
-        if (dropMapel.val() != '0') dropMapel.change();
-        //calculateTime("2010-11-10 06:50:40", "2010-11-16 08:58:40")
+        if (paramMapel && dropMapel.find('option[value="' + paramMapel + '"]').length > 0) {
+            dropMapel.val(paramMapel).trigger('change');
+        } else if (dropMapel.val() != '0') {
+            dropMapel.change();
+        }
     });
+
+    function autoSelectTargetMateri(targetId, targetKelas) {
+        let foundKls = null;
+        let foundType = '2'; // 2 = Tugas
+        let foundKjm = null;
+
+        if (targetKelas && arrKelasTugas && arrKelasTugas[targetKelas]) {
+            $.each(arrKelasTugas[targetKelas], function(idx, item) {
+                if (item.id_materi == targetId || item.id_kjm == targetId) {
+                    foundKls = targetKelas;
+                    foundKjm = item.id_kjm;
+                    foundType = '2';
+                    return false;
+                }
+            });
+        }
+
+        if (!foundKls && targetKelas && arrKelasMateri && arrKelasMateri[targetKelas]) {
+            $.each(arrKelasMateri[targetKelas], function(idx, item) {
+                if (item.id_materi == targetId || item.id_kjm == targetId) {
+                    foundKls = targetKelas;
+                    foundKjm = item.id_kjm;
+                    foundType = '1';
+                    return false;
+                }
+            });
+        }
+
+        if (!foundKls && arrKelasTugas) {
+            $.each(arrKelasTugas, function(klsId, items) {
+                if (items && Array.isArray(items)) {
+                    $.each(items, function(idx, item) {
+                        if (item.id_materi == targetId || item.id_kjm == targetId) {
+                            foundKls = klsId;
+                            foundKjm = item.id_kjm;
+                            foundType = '2';
+                            return false;
+                        }
+                    });
+                }
+                if (foundKls) return false;
+            });
+        }
+
+        if (!foundKls && arrKelasMateri) {
+            $.each(arrKelasMateri, function(klsId, items) {
+                if (items && Array.isArray(items)) {
+                    $.each(items, function(idx, item) {
+                        if (item.id_materi == targetId || item.id_kjm == targetId) {
+                            foundKls = klsId;
+                            foundKjm = item.id_kjm;
+                            foundType = '1';
+                            return false;
+                        }
+                    });
+                }
+                if (foundKls) return false;
+            });
+        }
+
+        if (foundKls) {
+            var valKls = foundType + '-' + foundKls;
+            label = (foundType === '1') ? 'Materi' : 'Tugas';
+            $('#kelas-materi').val(valKls).trigger('change.select2');
+            createDropdownMateri(valKls);
+            if (foundKjm) {
+                $('#dropdown-materi').val(foundKjm).trigger('change.select2');
+                getLogSiswa();
+            }
+        }
+    }
 
     function createDropdownKelas(arrKelas) {
         var klsMateri = $('#kls-materi');
@@ -672,6 +757,17 @@
                     $('#title-doc').html('NILAI HARIAN ' + namaMapel.toUpperCase() + '<br>KELAS ' + namaKelas + '<br>' + tanggalLengkap);
 
                     $('#loading').addClass('d-none');
+
+                    if (paramSiswa && resultAll) {
+                        $.each(resultAll, function (key, val) {
+                            if (val.id_siswa == paramSiswa) {
+                                setTimeout(function () {
+                                    $('#daftarModal').data('key', key).modal('show');
+                                }, 400);
+                                return false;
+                            }
+                        });
+                    }
 
                     $('input#search').quicksearch('table#log tbody tr');
 

@@ -223,6 +223,63 @@ class Chat extends CI_Controller {
             }
         }
 
+        // Ensure any requested target user or unread sender is included in $kontak
+        $target_user_id = $this->input->get('user', true);
+        $existing_user_ids = [];
+        foreach ($kontak as $k) {
+            $existing_user_ids[] = (string)$k->id_user;
+        }
+
+        $users_to_add = [];
+        if ($target_user_id && !in_array((string)$target_user_id, $existing_user_ids)) {
+            $users_to_add[] = $target_user_id;
+        }
+        foreach ($unread_counts as $uid => $cnt) {
+            if (!in_array((string)$uid, $existing_user_ids) && !in_array($uid, $users_to_add)) {
+                $users_to_add[] = $uid;
+            }
+        }
+
+        foreach ($users_to_add as $uid) {
+            $u = $this->db->where('id', $uid)->get('users')->row();
+            if ($u) {
+                $st = $this->db->select('s.nama, mk.nama_kelas')
+                    ->from('master_siswa s')
+                    ->join('kelas_siswa ks', 's.id_siswa = ks.id_siswa AND ks.id_tp = ' . $tp->id_tp . ' AND ks.id_smt = ' . $smt->id_smt, 'left')
+                    ->join('master_kelas mk', 'ks.id_kelas = mk.id_kelas', 'left')
+                    ->where('s.username', $u->username)
+                    ->get()->row();
+                if ($st) {
+                    $kontak[] = (object)[
+                        'id_user' => $u->id,
+                        'nama'    => $st->nama,
+                        'role'    => 'siswa',
+                        'kelas'   => $st->nama_kelas,
+                        'unread'  => isset($unread_counts[$u->id]) ? $unread_counts[$u->id] : 0
+                    ];
+                } else {
+                    $gr = $this->db->where('id_user', $u->id)->get('master_guru')->row();
+                    if ($gr) {
+                        $kontak[] = (object)[
+                            'id_user' => $u->id,
+                            'nama'    => $gr->nama_guru,
+                            'role'    => 'guru',
+                            'kelas'   => null,
+                            'unread'  => isset($unread_counts[$u->id]) ? $unread_counts[$u->id] : 0
+                        ];
+                    } else {
+                        $kontak[] = (object)[
+                            'id_user' => $u->id,
+                            'nama'    => trim($u->first_name . ' ' . $u->last_name) ?: $u->username,
+                            'role'    => 'admin',
+                            'kelas'   => null,
+                            'unread'  => isset($unread_counts[$u->id]) ? $unread_counts[$u->id] : 0
+                        ];
+                    }
+                }
+            }
+        }
+
         $data = [
             'user' => $user,
             'profile' => $this->dashboard->getProfileAdmin($user->id),
@@ -547,6 +604,8 @@ class Chat extends CI_Controller {
 
             // Send dashboard notification if it's a private chat
             if ($penerima_id) {
+                // Clear any incoming notifications and messages for the sender from recipient
+                $this->chat_model->tandai_dibaca($user->id, $penerima_id);
                 try {
                     $this->load->model('Notifikasi_model', 'notif_m');
                     $sender_name = 'Seseorang';
@@ -578,7 +637,7 @@ class Chat extends CI_Controller {
                         'type'     => 'chat_masuk',
                         'title'    => 'Chat dari ' . $sender_name,
                         'body'     => substr($data['pesan'], 0, 100),
-                        'url'      => 'chat',
+                        'url'      => 'chat?user=' . $user->id,
                         'metadata' => ['pengirim_id' => $user->id]
                     ]);
                 } catch (Throwable $e) {

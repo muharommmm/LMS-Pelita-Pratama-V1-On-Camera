@@ -25,7 +25,7 @@
         $row->jam_ke = $grouped[$row->id_kelas]++;
     }
     return $results;
-} public function getJadwalKbm($id_tp, $id_smt, $id_kelas = null) { goto Ih3uJ; cbcv3: $this->db->from("\153\x65\154\141\x73\x5f\152\141\144\x77\x61\x6c\137\153\142\x6d"); goto bKyy7; EeEW7: goto ccm5x; goto UpC_O; bKyy7: $this->db->where("\151\144\x5f\x74\160", $id_tp); goto M7FkY; ylCAL: if ($id_kelas != null) { goto YRYso; } goto gkUEU; M7FkY: $this->db->where("\151\x64\137\163\155\164", $id_smt); goto ylCAL; Ih3uJ: $this->db->select("\52"); goto cbcv3; Z1Gi7: return $query; goto ZySI_; UpC_O: YRYso: goto jWhNj; jWhNj: $this->db->where("\x69\144\x5f\153\145\154\x61\163", $id_kelas); goto UGzgt; gkUEU: $query = $this->db->get()->result(); goto EeEW7; UGzgt: $query = $this->db->get()->row(); goto gsk9A; gsk9A: ccm5x: goto Z1Gi7; ZySI_: } public function getNotifikasiTugasGuru($id_guru) {
+} public function getJadwalKbm($id_tp, $id_smt, $id_kelas = null) { goto Ih3uJ; cbcv3: $this->db->from("\153\x65\154\x61\x73\x5f\152\141\144\x77\x61\154\x5f\153\x62\155"); goto bKyy7; EeEW7: goto ccm5x; goto UpC_O; bKyy7: $this->db->where("\151\144\x5f\x74\160", $id_tp); goto M7FkY; ylCAL: if ($id_kelas != null) { goto YRYso; } goto gkUEU; M7FkY: $this->db->where("\x69\144\x5f\x73\x6d\x74", $id_smt); goto ylCAL; Ih3uJ: $this->db->select("\52"); goto cbcv3; Z1Gi7: return $query; goto ZySI_; UpC_O: YRYso: goto jWhNj; jWhNj: $this->db->where("\x69\144\x5f\153\x65\154\x61\x73", $id_kelas); goto UGzgt; gkUEU: $query = $this->db->get()->result(); goto EeEW7; UGzgt: $query = $this->db->get()->row(); goto gsk9A; gsk9A: ccm5x: goto Z1Gi7; ZySI_: }    public function getNotifikasiTugasGuru($id_guru) {
         $sql_tugas = "
             SELECT 
                 'tugas' as tipe,
@@ -38,6 +38,9 @@
             JOIN master_siswa s ON l.id_siswa = s.id_siswa
             WHERE m.id_guru = ? 
               AND m.jenis = 2 
+              AND l.finish_time IS NOT NULL 
+              AND l.finish_time != '' 
+              AND l.finish_time != '0000-00-00 00:00:00'
               AND (l.nilai IS NULL OR l.nilai = '' OR l.nilai = '0')
         ";
         $sql_ujian = "
@@ -58,8 +61,8 @@
         $sql = "($sql_tugas) UNION ($sql_ujian) ORDER BY waktu DESC LIMIT 5";
         return $this->db->query($sql, array($id_guru, $id_guru))->result_array();
     }
-        public function getAktivitasGuru($id_user, $id_guru) {
-        // PERBAIKAN: log_materi.id_materi berelasi ke kelas_jadwal_materi.id_kjm
+    public function getAktivitasGuru($id_user, $id_guru) {
+        // PERBAIKAN: log_materi.id_materi berelasi ke kelas_materi.id_materi
         $sql_tugas = "
             SELECT 
                 l.id_log as id,
@@ -67,13 +70,20 @@
                 m.judul_materi as judul,
                 s.nama as nama_siswa,
                 m.id_materi as id_referensi,
+                m.id_mapel as id_mapel,
+                l.id_siswa as id_siswa,
+                ks.id_kelas as id_kelas,
                 l.log_time as waktu,
                 0 as is_read
             FROM log_materi l
             JOIN kelas_materi m ON l.id_materi = m.id_materi
             JOIN master_siswa s ON l.id_siswa = s.id_siswa
+            LEFT JOIN kelas_siswa ks ON (s.id_siswa = ks.id_siswa AND ks.id_tp = m.id_tp AND ks.id_smt = m.id_smt)
             WHERE m.id_guru = ? 
               AND m.jenis = 2 
+              AND l.finish_time IS NOT NULL 
+              AND l.finish_time != '' 
+              AND l.finish_time != '0000-00-00 00:00:00'
               AND (l.nilai IS NULL OR l.nilai = '' OR l.nilai = '0')
         ";
 
@@ -84,12 +94,16 @@
                 b.bank_nama as judul,
                 s.nama as nama_siswa,
                 j.id_jadwal as id_referensi,
+                b.bank_mapel_id as id_mapel,
+                n.id_siswa as id_siswa,
+                ks.id_kelas as id_kelas,
                 n.time_create as waktu,
                 0 as is_read
             FROM cbt_nilai n
             JOIN cbt_jadwal j ON n.id_jadwal = j.id_jadwal
             JOIN cbt_bank_soal b ON j.id_bank = b.id_bank
             JOIN master_siswa s ON n.id_siswa = s.id_siswa
+            LEFT JOIN kelas_siswa ks ON (s.id_siswa = ks.id_siswa AND ks.id_tp = j.id_tp AND ks.id_smt = j.id_smt)
             WHERE b.bank_guru_id = ?
               AND b.jml_esai > 0
               AND (n.dikoreksi = 0 OR n.dikoreksi IS NULL)
@@ -102,6 +116,9 @@
                 'Pesan Baru' as judul,
                 u.first_name as nama_siswa,
                 c.pengirim_id as id_referensi,
+                0 as id_mapel,
+                0 as id_siswa,
+                0 as id_kelas,
                 c.created_at as waktu,
                 c.is_read as is_read
             FROM chat_messages c
@@ -117,11 +134,15 @@
                 m.judul_materi as judul,
                 s.nama as nama_siswa,
                 m.id_materi as id_referensi,
+                m.id_mapel as id_mapel,
+                l.id_siswa as id_siswa,
+                ks.id_kelas as id_kelas,
                 l.log_time as waktu,
                 0 as is_read
             FROM log_materi l
             JOIN kelas_materi m ON l.id_materi = m.id_materi
             JOIN master_siswa s ON l.id_siswa = s.id_siswa
+            LEFT JOIN kelas_siswa ks ON (s.id_siswa = ks.id_siswa AND ks.id_tp = m.id_tp AND ks.id_smt = m.id_smt)
             WHERE m.id_guru = ? 
               AND m.jenis = 1
               AND (l.text IS NOT NULL OR l.file IS NOT NULL OR l.finish_time IS NOT NULL)

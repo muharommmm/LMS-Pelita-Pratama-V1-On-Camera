@@ -159,6 +159,9 @@
                     'judul'        => $row->judul,
                     'nama_siswa'   => $row->nama_siswa,
                     'id_referensi' => $row->id_referensi,
+                    'id_mapel'     => isset($row->id_mapel) ? $row->id_mapel : 0,
+                    'id_siswa'     => isset($row->id_siswa) ? $row->id_siswa : 0,
+                    'id_kelas'     => isset($row->id_kelas) ? $row->id_kelas : 0,
                     'waktu'        => date('d M Y, H:i', strtotime($row->waktu)),
                     'is_read'      => $row->is_read == 1 ? true : false
                 ];

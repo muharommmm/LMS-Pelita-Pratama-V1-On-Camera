@@ -659,13 +659,21 @@ $foto_profil = $siswa->foto ? base_url($siswa->foto) : base_url('assets/img/sisw
                     container.classList.remove('hidden');
                 }
 
-                // Click: mark stored notif as read
+                // Click: mark stored notif as read & remove from feed
                 container.querySelectorAll('.siswa-feed-item[data-notif-id]').forEach(function(el) {
                     el.addEventListener('click', function(e) {
                         var nid = this.dataset.notifId;
+                        var card = this.closest('.siswa-feed-item-wrapper');
+                        var targetHref = this.href;
+                        
+                        if (card) {
+                            card.style.transition = 'opacity 0.2s ease, max-height 0.2s ease';
+                            card.style.opacity = '0';
+                        }
+                        
                         if (!nid) return;
                         e.preventDefault();
-                        var targetHref = this.href;
+                        
                         fetch(baseUrl + 'notifikasi/baca', {
                             method: 'POST',
                             headers: {'Content-Type':'application/x-www-form-urlencoded'},
@@ -679,7 +687,6 @@ $foto_profil = $siswa->foto ? base_url($siswa->foto) : base_url('assets/img/sisw
                                 window.location.href = targetHref;
                             }
                         });
-                        this.classList.add('read');
                     });
                 });
 

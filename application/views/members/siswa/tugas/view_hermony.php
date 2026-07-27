@@ -359,6 +359,34 @@ $avatar_guru = !empty($tugas->foto) ? base_url($tugas->foto) : base_url('assets/
                                         <?= is_object($log_selesai) && isset($log_selesai->text) && trim(strip_tags($log_selesai->text)) !== '' ? $log_selesai->text : '<em class="text-on-surface-variant text-xs">Tidak ada catatan jawaban teks.</em>' ?>
                                     </div>
                                 </div>
+
+                                <?php if (!empty($dataFileAttach)) : ?>
+                                    <div class="pt-3 border-t border-outline-variant/60 space-y-2">
+                                        <label class="text-[10px] font-bold text-on-surface-variant uppercase tracking-wider">Lampiran Siswa</label>
+                                        <div class="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                                            <?php foreach ($dataFileAttach as $file) :
+                                                $src = isset($file['src']) ? base_url($file['src']) : '';
+                                                $name = isset($file['name']) ? $file['name'] : 'File Lampiran';
+                                                $type = isset($file['type']) ? $file['type'] : '';
+                                                $is_image = strpos($type, 'image') !== false || preg_match('/\.(jpg|jpeg|png|gif|webp)$/i', $src);
+                                                $is_video = strpos($type, 'video') !== false || preg_match('/\.(mp4|mpeg|avi|webm)$/i', $src);
+                                            ?>
+                                                <div class="border border-outline-variant rounded-lg p-2 flex flex-col justify-between items-center text-center bg-slate-50/50 hover:bg-slate-50 transition-all min-h-[100px]">
+                                                    <div class="flex-1 flex items-center justify-center p-2">
+                                                        <?php if ($is_image) : ?>
+                                                            <img class="max-h-16 rounded object-cover cursor-pointer hover:opacity-90 transition-opacity" src="<?= $src ?>" onclick="window.open(this.src)" title="Buka gambar"/>
+                                                        <?php elseif ($is_video) : ?>
+                                                            <span class="material-symbols-outlined text-3xl text-primary cursor-pointer hover:scale-105 transition-all" onclick="window.open('<?= $src ?>')">play_circle</span>
+                                                        <?php else : ?>
+                                                            <span class="material-symbols-outlined text-3xl text-slate-400 cursor-pointer" onclick="window.open('<?= $src ?>')">description</span>
+                                                        <?php endif; ?>
+                                                    </div>
+                                                    <p class="text-[9px] text-on-surface font-semibold truncate w-full px-1" title="<?= htmlspecialchars($name) ?>"><?= htmlspecialchars($name) ?></p>
+                                                </div>
+                                            <?php endforeach; ?>
+                                        </div>
+                                    </div>
+                                <?php endif; ?>
                             </div>
                         <?php else : ?>
                             <!-- Form Text/Html Editor -->
@@ -657,7 +685,7 @@ $avatar_guru = !empty($tugas->foto) ? base_url($tugas->foto) : base_url('assets/
                 var cur = dataFiles[i];
                 if (cur.name === removeItem) {
                     dataFiles.splice(i, 1);
-                    saveFileToDb();
+                    createPreviewFile();
                     deleteImage(cur.src);
                     break;
                 }
@@ -704,7 +732,10 @@ $avatar_guru = !empty($tugas->foto) ? base_url($tugas->foto) : base_url('assets/
                 item["src"] = data.src;
                 item["name"] = data.filename;
                 dataFiles.push(item);
-                saveFileToDb();
+                createPreviewFile();
+                if (typeof showSuccessToast === 'function') {
+                    showSuccessToast('File lampiran diunggah');
+                }
             },
             error: function (e) {
                 console.error("error", e.responseText);
