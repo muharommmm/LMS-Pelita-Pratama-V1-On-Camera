@@ -298,7 +298,35 @@ $avatar_guru = !empty($tugas->foto) ? base_url($tugas->foto) : base_url('assets/
                             
                             <!-- Isi Tugas (HTML Content) -->
                             <div class="text-xs text-on-surface leading-relaxed text-justify space-y-3 prose max-w-none pt-2 border-t border-outline-variant/60">
-                                <?= $tugas->isi_materi ?>
+                                <?php
+                                $isi_tugas = $tugas->isi_materi;
+                                if (!empty($isi_tugas)) {
+                                    $dom = new DOMDocument();
+                                    @$dom->loadHTML(mb_convert_encoding($isi_tugas, 'HTML-ENTITIES', 'UTF-8'));
+                                    $images = $dom->getElementsByTagName('img');
+                                    foreach ($images as $image) {
+                                        if ($image instanceof DOMElement) {
+                                            $curSrc = $image->getAttribute('src');
+                                            if (strpos($curSrc, 'http://') === false && strpos($curSrc, 'https://') === false && strpos($curSrc, '//') === false) {
+                                                $cleanSrc = ltrim($curSrc, '/');
+                                                $absoluteUrl = base_url($cleanSrc);
+                                                $absoluteUrl = str_replace('\\', '/', $absoluteUrl);
+                                                $image->setAttribute('src', $absoluteUrl);
+                                            }
+                                        }
+                                    }
+                                    $body = $dom->getElementsByTagName('body')->item(0);
+                                    if ($body) {
+                                        $isi_tugas = '';
+                                        foreach ($body->childNodes as $child) {
+                                            $isi_tugas .= $dom->saveHTML($child);
+                                        }
+                                    } else {
+                                        $isi_tugas = $dom->saveHTML();
+                                    }
+                                }
+                                echo $isi_tugas;
+                                ?>
                             </div>
                         </div>
                     </div>
