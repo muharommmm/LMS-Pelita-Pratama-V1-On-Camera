@@ -135,6 +135,8 @@
     var styleHadir = ' style="border: 1px solid #8d8d8d; text-align: center; vertical-align: middle;background-color:#78E96B;';
     var styleTelat = ' style="border: 1px solid #8d8d8d; text-align: center; vertical-align: middle;background-color:#FFF493;';
     var styleAlpha = ' style="border: 1px solid #8d8d8d; text-align: center; vertical-align: middle;background-color:#FFCCCD;';
+    var styleSakit = ' style="border: 1px solid #8d8d8d; text-align: center; vertical-align: middle;background-color:#93C5FD;';
+    var styleIzin = ' style="border: 1px solid #8d8d8d; text-align: center; vertical-align: middle;background-color:#FDE047;';
     var styleCenterMiddle = ' style="border: 1px solid #8d8d8d; text-align: center; vertical-align: middle;';
     var styleLeftMiddle = ' style="border: 1px solid #8d8d8d; vertical-align: middle;';
     var styleKosong = ' style="border: 1px solid #8d8d8d;background-color: #a6a6a6;';
@@ -147,6 +149,8 @@
     var style_Hadir = ' data-fill-color="78E96B" data-t="s" data-a-v="middle" data-a-h="center" data-b-a-s="thin" data-f-bold="false"';
     var style_Telat = ' data-fill-color="FFF493" data-t="s" data-a-v="middle" data-a-h="center" data-b-a-s="thin" data-f-bold="false"';
     var style_Alpha = ' data-fill-color="FFCCCD" data-t="s" data-a-v="middle" data-a-h="center" data-b-a-s="thin" data-f-bold="false"';
+    var style_Sakit = ' data-fill-color="93C5FD" data-t="s" data-a-v="middle" data-a-h="center" data-b-a-s="thin" data-f-bold="false"';
+    var style_Izin = ' data-fill-color="FDE047" data-t="s" data-a-v="middle" data-a-h="center" data-b-a-s="thin" data-f-bold="false"';
     var styleEmpty = ' data-fill-color="a6a6a6" data-t="s" data-a-v="middle" data-a-h="center" data-b-a-s="thin" data-f-bold="false"';
     var styleNama = ' data-fill-color="ffffff" data-t="s" data-a-v="middle" data-b-a-s="thin" data-f-bold="false"';
 
@@ -186,7 +190,7 @@
             } else {
                 if (data.mapels[tgll] != null) {
                     var jmlJam = Object.keys(data.mapels[tgll]).length;
-                    totalJmlCol += 2 * jmlJam;
+                    totalJmlCol += 3 * jmlJam;
                 }
             }
         }
@@ -229,7 +233,7 @@
             } else {
                 if (data.mapels[tg] != null) {
                     var jmlJam = Object.keys(data.mapels[tg]).length;
-                    table += '<th colspan="' + (2 * jmlJam) + '" class="tanggal" ' + styleCenterMiddle + '"' + styleHead + '>'+ hari + ' ' + '<br>' + tg + '</th>';
+                    table += '<th colspan="' + (3 * jmlJam) + '" class="tanggal" ' + styleCenterMiddle + '"' + styleHead + '>'+ hari + ' ' + '<br>' + tg + '</th>';
                 }
             }
         }
@@ -246,7 +250,7 @@
             if (hari2 !== 'Min' && data.mapels[tg2] != null) {
                 //var jmlJam = Object.keys(data.mapels[tg2]).length;
                 $.each(data.mapels[tg2], function (k, v) {
-                    table += '<th colspan="2" class="tanggal" ' + styleCenterMiddle + '"' + styleHead + '>jam ke ' + k + '</th>';
+                    table += '<th colspan="3" class="tanggal" ' + styleCenterMiddle + '"' + styleHead + '>jam ke ' + k + '</th>';
                 });
             }
         }
@@ -260,7 +264,8 @@
             if (hari2 !== 'Min' && data.mapels[tg2] != null) {
                 var jmlJam = Object.keys(data.mapels[tg2]).length;
                 for (let j = 0; j < jmlJam; j++) {
-                    table += '<th class="tanggal" ' + styleCenterMiddle + '"' + styleHead + '>M</th>' +
+                    table += '<th class="tanggal" ' + styleCenterMiddle + '"' + styleHead + '>F</th>' +
+                        '<th class="tanggal" ' + styleCenterMiddle + '"' + styleHead + '>M</th>' +
                         '<th class="tanggal" ' + styleCenterMiddle + '"' + styleHead + '>T</th>';
                 }
             }
@@ -300,6 +305,20 @@
                 } else {
                     if (adaJadwal) {
                         $.each(data.mapels[tglm], function (jamKe, tgl) {
+                            var statusManual = value.manual[i];
+                            if (statusManual === 'H') {
+                                table += '<td ' + styleHadir + '"'+ style_Hadir +'>&check;</td>';
+                            } else if (statusManual === 'S') {
+                                table += '<td ' + styleSakit + '"'+ style_Sakit +'>S</td>';
+                            } else if (statusManual === 'I') {
+                                table += '<td ' + styleIzin + '"'+ style_Izin +'>I</td>';
+                            } else if (statusManual === 'A') {
+                                table += '<td ' + styleAlpha + '"'+ style_Alpha +'>A</td>';
+                            } else {
+                                table += '<td ' + styleCenterMiddle + '"'+ styleNormal +'>-</td>';
+                            }
+                            colWidth += ',4';
+
                             var adaMateri = data.materi[tglm][idmapel] != null && data.materi[tglm][idmapel][jamKe] != null && data.materi[tglm][idmapel][jamKe][1] != null;
                             if (adaMateri) {
                                 if (value.materi[i] != null && value.materi[i][jamKe] != null && value.materi[i][jamKe].jam != null) {
@@ -359,17 +378,26 @@
         table += '</table>';
         var styleSpan = 'style="white-space: nowrap;font-size: 10pt; font-weight: 600;"';
         table += '<div id="ket" style="margin-top: 6px">' +
-            '<div>Keterangan warna:</div><div>' +
+            '<div>Keterangan Singkatan Kolom:</div><div>' +
+            '<span ' + styleSpan + '><b>F</b>: Presensi Fisik (Manual Guru)</span>&ensp;|&ensp;' +
+            '<span ' + styleSpan + '><b>M</b>: Log KBM Materi (Online)</span>&ensp;|&ensp;' +
+            '<span ' + styleSpan + '><b>T</b>: Log KBM Tugas (Online)</span>' +
+            '</div><br>' +
+            '<div>Keterangan Warna / Status Kehadiran:</div><div>' +
             '<span ' + styleSpan + '>' +
-            '<span style="background: #FF9393; border: 1px solid black;">&ensp;&ensp;</span> Hari libur</span>' +
+            '<span style="background: #FF9393; border: 1px solid black;">&ensp;&ensp;</span> Hari libur / Minggu</span>' +
             '&ensp;&ensp;<span ' + styleSpan + '>' +
-            '<span style="background: #757575; border: 1px solid black;">&ensp;&ensp;</span> Tidak ada materi/tugas</span>' +
+            '<span style="background: #a6a6a6; border: 1px solid black;">&ensp;&ensp;</span> Tidak ada KBM</span>' +
             '&ensp;&ensp;<span ' + styleSpan + '>' +
-            '<span style="background: #78E96B; border: 1px solid black;">&ensp;&ensp;</span> (H) Hadir tepat waktu</span>' +
+            '<span style="background: #78E96B; border: 1px solid black;">&ensp;&ensp;</span> (H / &check;) Hadir / Tepat Waktu</span>' +
             '&ensp;&ensp;<span ' + styleSpan + '>' +
             '<span style="background: #FFF493; border: 1px solid black;">&ensp;&ensp;</span> (TL) Terlambat</span>' +
             '&ensp;&ensp;<span ' + styleSpan + '>' +
-            '<span style="background: #FFCCCD; border: 1px solid black;">&ensp;&ensp;</span> (TH) Tidak hadir</span>' +
+            '<span style="background: #93C5FD; border: 1px solid black;">&ensp;&ensp;</span> (S) Sakit</span>' +
+            '&ensp;&ensp;<span ' + styleSpan + '>' +
+            '<span style="background: #FDE047; border: 1px solid black;">&ensp;&ensp;</span> (I) Izin</span>' +
+            '&ensp;&ensp;<span ' + styleSpan + '>' +
+            '<span style="background: #FFCCCD; border: 1px solid black;">&ensp;&ensp;</span> (TH / A) Tidak Hadir / Alpha</span>' +
             '</div></div>';
         $('#konten-absensi').html(table);
         $('#loading').addClass('d-none');
