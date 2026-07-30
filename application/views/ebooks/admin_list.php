@@ -419,7 +419,9 @@
                     var matchKelas = false;
                     if (!selectedKelas) {
                         matchKelas = true;
-                    } else if (rowClass && rowClass !== 'undefined' && rowClass !== 'null') {
+                    } else if (!rowClass || rowClass === 'undefined' || rowClass === 'null' || rowClass === '') {
+                        matchKelas = true;
+                    } else {
                         var arrClass = rowClass.split(',');
                         if (arrClass.includes(String(selectedKelas))) {
                             matchKelas = true;

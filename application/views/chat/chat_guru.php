@@ -28,9 +28,9 @@
 
     <section class="content px-4 md:px-6 pb-6">
     <!-- Chat Interface Grid -->
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 relative overflow-hidden">
         <!-- Contact List -->
-        <div class="lg:col-span-1">
+        <div id="chat-contacts-card" class="lg:col-span-1 w-full lg:block">
             <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden flex flex-col h-[600px]">
                 <div class="bg-primary text-white p-4">
                     <h3 class="font-semibold m-0 text-white">Daftar Obrolan</h3>
@@ -78,11 +78,16 @@
         </div>
 
         <!-- Chat Room -->
-        <div class="lg:col-span-2">
+        <div id="chat-box-card" class="lg:col-span-2 w-full lg:block hidden">
             <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden flex flex-col h-[600px]">
                 <!-- Chat Header -->
                 <div class="bg-primary text-white p-4 flex items-center justify-between">
-                    <h3 class="font-semibold truncate m-0 text-white" id="judul-chat-room">Memuat...</h3>
+                    <div class="flex items-center gap-2 max-w-[80%]">
+                        <button type="button" id="btn-back-to-contacts" class="lg:hidden flex items-center justify-center p-1 rounded-full hover:bg-white/20 text-white mr-1 border-none bg-transparent cursor-pointer">
+                            <span class="material-symbols-outlined text-lg text-white">arrow_back</span>
+                        </button>
+                        <h3 class="font-semibold truncate m-0 text-white" id="judul-chat-room">Memuat...</h3>
+                    </div>
                     <div class="flex items-center gap-2">
                         <input type="text" id="cari-pesan" placeholder="Cari pesan..." class="hidden text-sm text-slate-800 px-3 py-1 rounded-md border-none focus:ring-2 focus:ring-white/50 w-40">
                         <button type="button" id="btn-toggle-cari-pesan" class="p-1 rounded-md hover:bg-white/20 transition-colors" title="Cari pesan">
@@ -257,14 +262,15 @@ $(document).ready(function() {
         }
     });
 
-    $('.kontak-item').on('click', function() {
+    // Fungsi untuk menset detail obrolan tanpa men-trigger efek transisi slide mobile (untuk startup load)
+    function selectContactSilent(el) {
         $('.kontak-item').removeClass('active');
-        $(this).addClass('active');
+        el.addClass('active');
 
-        var targetId = $(this).data('id');
-        var targetRole = $(this).data('role');
-        var targetNama = $(this).data('nama');
-        var targetKelas = $(this).data('kelas');
+        var targetId = el.data('id');
+        var targetRole = el.data('role');
+        var targetNama = el.data('nama');
+        var targetKelas = el.data('kelas');
 
         var idParts = String(targetId).split('_');
 
@@ -283,13 +289,30 @@ $(document).ready(function() {
             kelas_id_komunitas = null;
         }
 
-        $(this).find('.badge-unread').remove();
+        el.find('.badge-unread').remove();
         $('#judul-chat-room').text(aktif_nama);
         $('#area-pesan').html('<div class="text-center text-slate-500 mt-4 text-sm bg-white/60 inline-block px-4 py-2 rounded-full mx-auto table shadow-sm">Memuat obrolan...</div>');
         $('#cari-pesan').addClass('hidden').val('');
 
         previous_messages_count = 0;
         loadChatHistory();
+    }
+
+    // Contact selection
+    $('.kontak-item').on('click', function() {
+        // Jika mode mobile (lebar layar < 1024px), sembunyikan daftar kontak dan tampilkan chat box
+        if ($(window).width() < 1024) {
+            $('#chat-contacts-card').addClass('hidden');
+            $('#chat-box-card').removeClass('hidden');
+        }
+
+        selectContactSilent($(this));
+    });
+
+    // Kembali ke daftar kontak (hanya aktif di mobile)
+    $(document).on('click', '#btn-back-to-contacts', function() {
+        $('#chat-box-card').addClass('hidden');
+        $('#chat-contacts-card').removeClass('hidden');
     });
 
     const urlParams = new URLSearchParams(window.location.search);
@@ -311,7 +334,12 @@ $(document).ready(function() {
             targetContact[0].scrollIntoView({ block: 'nearest' });
         }
     } else if ($('#daftar-kontak .kontak-item').length > 0) {
-        $('#daftar-kontak .kontak-item').first().click();
+        var firstContact = $('#daftar-kontak .kontak-item').first();
+        if ($(window).width() >= 1024) {
+            firstContact.click();
+        } else {
+            selectContactSilent(firstContact);
+        }
     } else {
         $('#judul-chat-room').text('Tidak ada kontak');
         $('#area-pesan').html('<div class="text-center text-slate-500 mt-4 text-sm bg-white/60 inline-block px-4 py-2 rounded-full mx-auto table shadow-sm">Belum ada kontak obrolan tersedia.</div>');

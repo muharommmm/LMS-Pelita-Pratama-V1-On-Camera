@@ -141,7 +141,18 @@
                     var selectedMapel = $('#filter_mapel').val();
                     var selectedCategory = $('#filter_kategori').val();
 
-                    var matchClass = !selectedClass || rowClass == selectedClass;
+                    var matchClass = false;
+                    if (!selectedClass) {
+                        matchClass = true;
+                    } else if (!rowClass || rowClass === 'undefined' || rowClass === 'null' || rowClass === '') {
+                        matchClass = true;
+                    } else {
+                        var arrClass = String(rowClass).split(',');
+                        if (arrClass.indexOf(String(selectedClass)) !== -1) {
+                            matchClass = true;
+                        }
+                    }
+
                     var matchMapel = !selectedMapel || rowMapel == selectedMapel;
                     var matchCategory = !selectedCategory || rowCategory == selectedCategory;
 

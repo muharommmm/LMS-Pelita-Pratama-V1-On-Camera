@@ -158,7 +158,7 @@ $foto_profil = $siswa->foto ? base_url($siswa->foto) : base_url('assets/img/sisw
     </aside>
 
     <!-- Main Content Canvas -->
-    <main class="flex-1 p-container-padding-mobile md:p-container-padding-desktop pb-24 lg:pb-container-padding-desktop">
+    <main class="flex-1 min-w-0 p-container-padding-mobile md:p-container-padding-desktop pb-24 lg:pb-container-padding-desktop">
         <div class="max-w-4xl mx-auto space-y-8">
             <!-- 1. Greeting Card (Top) -->
             <section class="header-bg rounded-xl p-8 text-on-primary shadow-lumina relative flex flex-col md:flex-row items-center gap-8">
@@ -183,7 +183,7 @@ $foto_profil = $siswa->foto ? base_url($siswa->foto) : base_url('assets/img/sisw
                  ============================================================ -->
             <section id="siswa-activity-panel" class="lumina-card overflow-hidden">
                 <!-- Header -->
-                <div class="p-4 flex justify-between items-center"
+                <div class="p-4 flex flex-wrap gap-2 justify-between items-center"
                      style="background: linear-gradient(135deg, #334779, #1a237e);">
                     <div class="flex items-center gap-2">
                         <span class="text-xl">🔔</span>
@@ -332,7 +332,7 @@ $foto_profil = $siswa->foto ? base_url($siswa->foto) : base_url('assets/img/sisw
                             foreach ($limited_posts as $item) : 
                             ?>
                                 <div class="border-b border-outline-variant pb-3 last:border-0 last:pb-0 space-y-1">
-                                    <div class="text-sm font-semibold text-on-surface"><?= $item->text ?></div>
+                                    <div class="text-sm font-semibold text-on-surface break-words overflow-hidden"><?= $item->text ?></div>
                                     <div class="flex items-center justify-between text-xs text-on-surface-variant pt-2">
                                         <span>Oleh: <?= htmlspecialchars($item->nama_guru ?? 'Admin') ?></span>
                                         <span><?= date('d M Y', strtotime($item->tanggal ?? '')) ?></span>
