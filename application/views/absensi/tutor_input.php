@@ -96,6 +96,7 @@
                     <input type="hidden" name="mapel_id" id="hidden_mapel_id">
                     <input type="hidden" name="date" id="hidden_date">
                     <input type="hidden" name="jenis_kegiatan" id="hidden_jenis_kegiatan">
+                    <input type="hidden" name="session_time" id="hidden_session_time">
 
                     <div class="table-responsive">
                         <table class="table table-striped table-bordered table-hover" id="studentTable">
@@ -125,6 +126,70 @@
                     <?= form_close() ?>
                 </div>
             </div>
+            
+            <!-- CARD 2: RIWAYAT PENGISIAN ABSENSI GURU -->
+            <div class="card card-default my-shadow mb-4 border-left border-info" style="border-left-width: 4px !important;">
+                <div class="card-header bg-light">
+                    <h5 class="card-title text-info font-weight-bold"><i class="fas fa-history mr-2"></i> RIWAYAT PENGISIAN ABSENSI</h5>
+                </div>
+                <div class="card-body">
+                    <!-- Row Filter Riwayat -->
+                    <div class="row mb-4 align-items-end">
+                        <div class="col-md-4 col-sm-12">
+                            <label for="filter_month_history" class="font-weight-bold text-secondary text-sm">Filter Bulan</label>
+                            <select id="filter_month_history" class="form-control form-control-sm">
+                                <option value="">-- Default (7 Hari Terakhir) --</option>
+                                <option value="all">Semua Bulan</option>
+                                <?php
+                                $months = [
+                                    1 => 'Januari', 2 => 'Februari', 3 => 'Maret', 4 => 'April',
+                                    5 => 'Mei', 6 => 'Juni', 7 => 'Juli', 8 => 'Agustus',
+                                    9 => 'September', 10 => 'Oktober', 11 => 'November', 12 => 'Desember'
+                                ];
+                                foreach ($months as $num => $name) : ?>
+                                    <option value="<?= $num ?>"><?= $name ?></option>
+                                <?php endforeach; ?>
+                            </select>
+                        </div>
+                        <div class="col-md-4 col-sm-12">
+                            <label for="filter_class_history" class="font-weight-bold text-secondary text-sm">Filter Kelas</label>
+                            <select id="filter_class_history" class="form-control form-control-sm">
+                                <option value="">Semua Kelas</option>
+                                <?php foreach ($classes as $id_kelas => $nama_kelas) : ?>
+                                    <option value="<?= $id_kelas ?>"><?= htmlspecialchars($nama_kelas) ?></option>
+                                <?php endforeach; ?>
+                            </select>
+                        </div>
+                        <div class="col-md-2 col-sm-12">
+                            <button type="button" id="btn_filter_history" class="btn btn-info btn-sm btn-block text-white font-weight-bold">
+                                <i class="fas fa-filter mr-1"></i> Filter
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="table-responsive">
+                        <table class="table table-striped table-bordered table-hover text-sm">
+                            <thead class="bg-light">
+                                <tr class="text-center">
+                                    <th style="width: 50px;">No</th>
+                                    <th>Hari, Tanggal & Jam</th>
+                                    <th>Mata Pelajaran</th>
+                                    <th>Kelas</th>
+                                    <th>Metode KBM</th>
+                                    <th style="width: 120px;">Jumlah Siswa</th>
+                                    <th style="width: 150px;">Aksi</th>
+                                </tr>
+                            </thead>
+                            <tbody id="history_list_container">
+                                <tr>
+                                    <td colspan="7" class="text-center text-muted py-4"><i class="fas fa-spinner fa-spin mr-1"></i> Memuat riwayat absensi...</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
         </div>
     </section>
 </div>
@@ -159,12 +224,18 @@
             $(this).find('input[type="radio"]').prop('checked', true).trigger('change');
         });
 
+        // Reset session time lock if user changes filters manually
+        $('#class_select, #class_select_2, #mapel_select, #date_input, #jenis_kegiatan_select').on('change', function() {
+            $('#hidden_session_time').val('');
+        });
+
         $('#btn_load').on('click', function() {
             let classId = $('#class_select').val();
             let classId2 = $('#class_select_2').val();
             let mapelId = $('#mapel_select').val();
             let date = $('#date_input').val();
             let jenisKegiatan = $('#jenis_kegiatan_select').val();
+            let sessionTime = $('#hidden_session_time').val();
  
             if (!classId || !mapelId || !date || !jenisKegiatan) {
                 Swal.fire({
@@ -194,6 +265,7 @@
                     mapel_id: mapelId,
                     date: date,
                     jenis_kegiatan: jenisKegiatan,
+                    session_time: sessionTime,
                     '<?= $this->security->get_csrf_token_name() ?>': '<?= $this->security->get_csrf_hash() ?>'
                 },
                 dataType: 'JSON',
@@ -228,6 +300,81 @@
                     $('#student_list_container').html('<tr><td colspan="6" class="text-center text-danger">Terjadi kesalahan sistem.</td></tr>');
                 }
             });
+        });
+
+        // Function to load attendance history dynamically via AJAX
+        function loadHistory(month = '', classId = '') {
+            $('#history_list_container').html('<tr><td colspan="7" class="text-center text-muted py-4"><i class="fas fa-spinner fa-spin mr-1"></i> Memuat riwayat absensi...</td></tr>');
+            
+            $.ajax({
+                url: '<?= base_url("absensi/load_history_tutor") ?>',
+                type: 'POST',
+                data: {
+                    month: month,
+                    class_id: classId,
+                    '<?= $this->security->get_csrf_token_name() ?>': '<?= $this->security->get_csrf_hash() ?>'
+                },
+                dataType: 'JSON',
+                success: function(response) {
+                    if (response.status) {
+                        $('#history_list_container').html(response.html);
+                    } else {
+                        $('#history_list_container').html('<tr><td colspan="7" class="text-center text-danger py-4">Gagal memuat riwayat absensi.</td></tr>');
+                    }
+                },
+                error: function() {
+                    $('#history_list_container').html('<tr><td colspan="7" class="text-center text-danger py-4">Terjadi kesalahan koneksi saat memuat riwayat.</td></tr>');
+                }
+            });
+        }
+
+        // Load default history (last 7 days) on page load
+        loadHistory();
+
+        // Filter button click handler
+        $('#btn_filter_history').on('click', function() {
+            let month = $('#filter_month_history').val();
+            let classId = $('#filter_class_history').val();
+            loadHistory(month, classId);
+        });
+
+        // Edit button click handler (using delegation for dynamically loaded rows)
+        $(document).on('click', '.btn-edit-absensi', function() {
+            // Use attr to get raw string representation instead of jQuery auto-cast
+            let classIdsRaw = $(this).attr('data-classids') || '';
+            let classIds = classIdsRaw.toString().split(',');
+            let mapelId = $(this).attr('data-mapel');
+            let date = $(this).attr('data-date');
+            let jenis = $(this).attr('data-jenis');
+            let time = $(this).attr('data-time');
+
+            // Populate form
+            $('#class_select').val(classIds[0]).trigger('change');
+            if (classIds.length > 1) {
+                // Wait slightly for primary select change event to complete
+                setTimeout(function() {
+                    $('#class_select_2').val(classIds[1]).trigger('change');
+                }, 150);
+            } else {
+                $('#class_select_2').val('').trigger('change');
+            }
+
+            $('#mapel_select').val(mapelId);
+            $('#date_input').val(date);
+            $('#jenis_kegiatan_select').val(jenis);
+            
+            // Set session time
+            $('#hidden_session_time').val(time);
+
+            // Scroll up to form smoothly
+            $('html, body').animate({
+                scrollTop: $(".card-title").first().offset().top - 20
+            }, 500);
+
+            // Trigger load after dropdowns populate
+            setTimeout(function() {
+                $('#btn_load').click();
+            }, 300);
         });
 
         // Intercept Simpan Kehadiran button click

@@ -103,6 +103,9 @@
                     'name': 'Honorarium Tutor', 'link': 'honor', 'icon': 'fas fa-hand-holding-usd', 'cbt': '1'
                 },
                 {
+                    'name': 'Dashboard Pemantau', 'link': 'monitoring', 'icon': 'fas fa-binoculars', 'cbt': '1'
+                },
+                {
                     'name': 'Agenda Sekolah', 'link': 'agendas', 'icon': 'fas fa-calendar-alt', 'cbt': '1'
                 },
                 {

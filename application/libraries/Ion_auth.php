@@ -369,6 +369,26 @@ class Ion_auth
 			$recheck = $this->ion_auth_model->login_remembered_user();
 		}
 
+		if ($recheck)
+		{
+			$user_id = $this->session->userdata('user_id');
+			if ($user_id)
+			{
+				$last_update = $this->session->userdata('last_active_update');
+				$now = time();
+				// Update database at most once every 30 seconds per user
+				if (!$last_update || ($now - $last_update) > 30)
+				{
+					$fields = $this->db->list_fields('users');
+					if (in_array('last_active', $fields))
+					{
+						$this->db->where('id', $user_id)->update('users', ['last_active' => date('Y-m-d H:i:s')]);
+						$this->session->set_userdata('last_active_update', $now);
+					}
+				}
+			}
+		}
+
 		return $recheck;
 	}
 

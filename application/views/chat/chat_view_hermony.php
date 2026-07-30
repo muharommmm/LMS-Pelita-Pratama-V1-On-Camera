@@ -136,9 +136,9 @@ defined('BASEPATH') or exit('No direct script access allowed');
             </div>
 
             <!-- Chat Room Grid Layout -->
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 relative overflow-hidden">
                 <!-- Contacts Card -->
-                <div class="lumina-card flex flex-col h-[520px] overflow-hidden">
+                <div id="chat-contacts-card" class="lumina-card flex flex-col h-[520px] overflow-hidden w-full md:block">
                     <div class="p-4 border-b border-outline-variant bg-primary/5">
                         <input type="text" id="cari-kontak" placeholder="Cari kontak..." class="w-full text-xs py-1.5 px-3 border border-outline-variant rounded-lg focus:outline-none focus:border-primary"/>
                     </div>
@@ -175,9 +175,14 @@ defined('BASEPATH') or exit('No direct script access allowed');
                 </div>
 
                 <!-- Chat Box Card -->
-                <div class="lumina-card md:col-span-2 flex flex-col h-[520px] overflow-hidden">
+                <div id="chat-box-card" class="lumina-card md:col-span-2 flex flex-col h-[520px] overflow-hidden w-full md:block hidden">
                     <div class="p-4 border-b border-outline-variant bg-primary text-white flex justify-between items-center">
-                        <h4 class="font-headline font-bold text-sm" id="judul-chat-room">Memuat...</h4>
+                        <div class="flex items-center gap-2 max-w-[80%]">
+                            <button id="btn-back-to-contacts" class="md:hidden flex items-center justify-center p-1 rounded-full hover:bg-white/10 text-white mr-1">
+                                <span class="material-symbols-outlined text-lg">arrow_back</span>
+                            </button>
+                            <h4 class="font-headline font-bold text-sm truncate" id="judul-chat-room">Memuat...</h4>
+                        </div>
                         <div class="flex items-center gap-2">
                             <input type="text" id="cari-pesan" placeholder="Cari isi pesan..." class="hidden text-xs text-on-surface py-1 px-2.5 rounded-lg border border-outline-variant focus:outline-none focus:border-primary" style="width: 150px;"/>
                             <button id="btn-toggle-cari-pesan" class="hover:bg-white/10 p-1.5 rounded-full transition-colors flex items-center justify-center">
@@ -443,15 +448,15 @@ $(document).ready(function() {
         }
     });
 
-    // Contact selection
-    $(document).on('click', '.kontak-item', function() {
+    // Fungsi untuk menset detail obrolan tanpa men-trigger efek transisi slide mobile (untuk startup load)
+    function selectContactSilent(el) {
         $('.kontak-item').removeClass('bg-primary/5 border-l-4 border-l-primary');
-        $(this).addClass('bg-primary/5 border-l-4 border-l-primary');
+        el.addClass('bg-primary/5 border-l-4 border-l-primary');
 
-        var targetId = $(this).data('id');
-        var targetRole = $(this).data('role');
-        var targetNama = $(this).data('nama');
-        var targetKelas = $(this).data('kelas');
+        var targetId = el.data('id');
+        var targetRole = el.data('role');
+        var targetNama = el.data('nama');
+        var targetKelas = el.data('kelas');
 
         var idParts = String(targetId).split('_');
 
@@ -470,13 +475,30 @@ $(document).ready(function() {
             kelas_id_komunitas = null;
         }
 
-        $(this).find('.badge-unread').remove();
+        el.find('.badge-unread').remove();
         $('#judul-chat-room').text(aktif_nama);
         $('#area-pesan').html('<div class="text-center text-on-surface-variant text-xs py-6">Memuat obrolan...</div>');
         $('#cari-pesan').addClass('hidden').val('');
 
         previous_messages_count = 0;
         loadChatHistory();
+    }
+
+    // Contact selection
+    $(document).on('click', '.kontak-item', function() {
+        // Jika mode mobile, sembunyikan daftar kontak dan tampilkan box obrolan
+        if ($(window).width() < 768) {
+            $('#chat-contacts-card').addClass('hidden');
+            $('#chat-box-card').removeClass('hidden');
+        }
+
+        selectContactSilent($(this));
+    });
+
+    // Kembali ke daftar kontak (hanya aktif di mobile)
+    $(document).on('click', '#btn-back-to-contacts', function() {
+        $('#chat-box-card').addClass('hidden');
+        $('#chat-contacts-card').removeClass('hidden');
     });
 
     // Select target contact from URL or default to first contact
@@ -499,7 +521,12 @@ $(document).ready(function() {
             targetContact[0].scrollIntoView({ block: 'nearest' });
         }
     } else if ($('#daftar-kontak .kontak-item').length > 0) {
-        $('#daftar-kontak .kontak-item').first().click();
+        var firstContact = $('#daftar-kontak .kontak-item').first();
+        if ($(window).width() >= 768) {
+            firstContact.click();
+        } else {
+            selectContactSilent(firstContact);
+        }
     } else {
         $('#judul-chat-room').text('Tidak ada kontak');
         $('#area-pesan').html('<div class="text-center text-on-surface-variant text-xs py-6">Belum ada kontak obrolan tersedia.</div>');

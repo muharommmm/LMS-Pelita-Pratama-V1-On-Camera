@@ -332,8 +332,8 @@ $foto_profil = $siswa->foto ? base_url($siswa->foto) : base_url('assets/img/sisw
                             foreach ($limited_posts as $item) : 
                             ?>
                                 <div class="border-b border-outline-variant pb-3 last:border-0 last:pb-0 space-y-1">
-                                    <p class="text-sm font-semibold text-on-surface line-clamp-2"><?= strip_tags($item->text ?? '') ?></p>
-                                    <div class="flex items-center justify-between text-xs text-on-surface-variant">
+                                    <div class="text-sm font-semibold text-on-surface"><?= $item->text ?></div>
+                                    <div class="flex items-center justify-between text-xs text-on-surface-variant pt-2">
                                         <span>Oleh: <?= htmlspecialchars($item->nama_guru ?? 'Admin') ?></span>
                                         <span><?= date('d M Y', strtotime($item->tanggal ?? '')) ?></span>
                                     </div>

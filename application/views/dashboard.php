@@ -153,10 +153,28 @@
                         </div>
                     </div>
 
-                    <div class="card card-success my-shadow">
+                    <!-- PENGGUNA AKTIF SAAT INI (USER ONLINE) -->
+                    <div class="card card-indigo my-shadow mb-3 border-left border-indigo" style="border-left-width: 4px !important;">
+                        <div class="card-header bg-light">
+                            <div class="card-title font-weight-bold text-indigo" style="font-size: 14px;"><i class="fas fa-users-cog mr-2"></i> Pengguna Aktif Saat Ini</div>
+                            <div class="card-tools">
+                                <span class="badge badge-success text-xs px-2" id="online-users-count">0 Online</span>
+                            </div>
+                        </div>
+                        <div class="card-body p-0" style="max-height: 250px; overflow-y: auto;">
+                            <ul class="list-group list-group-flush" id="online-users-list">
+                                <li class="list-group-item text-center py-3 text-muted small"><i class="fas fa-spinner fa-spin mr-1"></i> Memuat data...</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div class="card card-success my-shadow collapsed-card">
                         <div class="card-header">
                             <div class="card-title">Aktifitas</div>
                             <div class="card-tools">
+                                <button type="button" class="btn btn-sm" data-card-widget="collapse">
+                                    <i class="fas fa-plus text-white"></i>
+                                </button>
                                 <button type="button" onclick="hapusLogAktivitas()" class="btn btn-sm">
                                     <i class="fa fa-trash text-white"></i>
                                 </button>
@@ -363,6 +381,56 @@
 <script>
     adaJadwalUjian = '<?=count($ada_ujian)?>';
     localStorage.setItem('ada_jadwal_ujian', adaJadwalUjian);
+
+    $(document).ready(function() {
+        function loadOnlineUsers() {
+            $.ajax({
+                url: '<?= base_url("dashboard/get_online_users") ?>',
+                type: 'GET',
+                dataType: 'JSON',
+                success: function(response) {
+                    if (response.status) {
+                        let html = '';
+                        let count = response.data.length;
+                        $('#online-users-count').text(count + ' Online');
+                        
+                        if (count > 0) {
+                            $.each(response.data, function(i, user) {
+                                let badgeColor = 'badge-primary';
+                                if (user.role.toLowerCase() === 'guru') {
+                                    badgeColor = 'badge-success';
+                                } else if (user.role.toLowerCase() === 'siswa') {
+                                    badgeColor = 'badge-info';
+                                }
+
+                                let detailInfo = '';
+                                if (user.kelas) {
+                                    detailInfo = ' <span class="text-xs text-muted">(' + user.kelas + ')</span>';
+                                }
+
+                                html += '<li class="list-group-item d-flex justify-content-between align-items-center py-2 px-3 small">' +
+                                        '  <div>' +
+                                        '    <strong>' + user.nama + '</strong>' + detailInfo +
+                                        '    <br><span class="badge ' + badgeColor + ' text-[10px] px-1.5 py-0.5" style="font-size:9px;">' + user.role + '</span>' +
+                                        '  </div>' +
+                                        '  <span class="text-xs text-muted"><i class="far fa-clock mr-1"></i>' + user.waktu + '</span>' +
+                                        '</li>';
+                            });
+                        } else {
+                            html = '<li class="list-group-item text-center py-3 text-muted small">Tidak ada pengguna aktif dalam 1 menit terakhir.</li>';
+                        }
+                        $('#online-users-list').html(html);
+                    }
+                }
+            });
+        }
+
+        // Initial load
+        loadOnlineUsers();
+
+        // Poll every 10 seconds
+        setInterval(loadOnlineUsers, 10000);
+    });
 </script>
 <script src="<?= base_url() ?>/assets/app/js/jquery.rowspanizer.js"></script>
 <script src="<?= base_url() ?>/assets/app/js/dashboard.js"></script>

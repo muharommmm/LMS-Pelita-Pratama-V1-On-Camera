@@ -39,12 +39,15 @@ class Absensi_model extends CI_Model {
     /**
      * Get specific class attendance records for a mapel and date
      */
-    public function get_attendance($class_id, $mapel_id, $date) {
+    public function get_attendance($class_id, $mapel_id, $date, $time = null) {
         $this->db->select('*');
         $this->db->from('absensi_siswa');
         $this->db->where('class_id', $class_id);
         $this->db->where('mapel_id', $mapel_id);
         $this->db->where('date', $date);
+        if ($time !== null) {
+            $this->db->where('time', $time);
+        }
         $results = $this->db->get()->result();
 
         $mapped = [];
