@@ -48,6 +48,22 @@
                         </div>
                     </div>
 
+                    <!-- PANEL QUICK ACTION REMINDER WA -->
+                    <div class="card card-success my-shadow mb-3 border-left border-success" style="border-left-width: 4px !important;">
+                        <div class="card-header bg-light">
+                            <div class="card-title font-weight-bold text-success" style="font-size: 14px;">
+                                <i class="fab fa-whatsapp mr-2"></i> WhatsApp Reminder Jadwal
+                            </div>
+                        </div>
+                        <div class="card-body p-3 text-center">
+                            <p class="small text-muted mb-2">Kirim pemberitahuan jadwal mengajar hari ini ke WhatsApp Guru/Tutor.</p>
+                            <button class="btn btn-sm btn-success btn-block" id="btn-quick-wa-reminder" onclick="kirimReminderQuick()">
+                                <i class="fab fa-whatsapp mr-1"></i> Kirim Reminder Sekarang
+                            </button>
+                            <div id="quick-wa-status" class="small mt-2 font-weight-bold" style="display: none;"></div>
+                        </div>
+                    </div>
+
                     <div class="card card-primary my-shadow">
                         <div class="card-header">
                             <div class="card-title">
@@ -451,6 +467,30 @@
         // Poll every 10 seconds
         setInterval(loadOnlineUsers, 10000);
     });
+
+    function kirimReminderQuick() {
+        var btn = $('#btn-quick-wa-reminder');
+        var status = $('#quick-wa-status');
+        
+        btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin mr-1"></i> Mengirim...');
+        status.hide().removeClass('text-success text-danger text-warning');
+
+        $.post('<?= base_url("cron/send_jadwal_reminder") ?>', {
+            manual: '1',
+            csrf_token: '<?= $this->security->get_csrf_hash() ?>'
+        }, function(res) {
+            btn.prop('disabled', false).html('<i class="fab fa-whatsapp mr-1"></i> Kirim Reminder Sekarang');
+            status.show();
+            if (res.status) {
+                status.addClass('text-success').html('<i class="fas fa-check-circle mr-1"></i> ' + res.message);
+            } else {
+                status.addClass('text-warning').html('<i class="fas fa-exclamation-triangle mr-1"></i> ' + res.message);
+            }
+        }, 'json').fail(function() {
+            btn.prop('disabled', false).html('<i class="fab fa-whatsapp mr-1"></i> Kirim Reminder Sekarang');
+            status.show().addClass('text-danger').html('<i class="fas fa-times-circle mr-1"></i> Terjadi kesalahan server.');
+        });
+    }
 </script>
 <script src="<?= base_url() ?>/assets/app/js/jquery.rowspanizer.js"></script>
 <script src="<?= base_url() ?>/assets/app/js/dashboard.js"></script>

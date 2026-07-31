@@ -160,6 +160,7 @@
                         //{'name': 'Update', 'link':"update", 'icon': ''}
                     ]
                 },
+                {'name': 'WA Reminder', 'link': 'wa_settings', 'icon': 'fab fa-whatsapp', 'cbt': '1'},
             ]
         },
         {'name': 'LOGOUT', 'link': 'pengumuman', 'icon': 'fas fa-sign-out-alt',  'cbt': '1'},
