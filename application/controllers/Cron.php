@@ -168,6 +168,9 @@ class Cron extends CI_Controller {
      *   - Tombol manual di dashboard admin (AJAX POST)
      */
     public function send_jadwal_reminder() {
+        // Mencegah timeout karena script berjalan lebih lama dengan jeda delay
+        set_time_limit(0);
+
         if (!$this->is_authorized()) {
             $this->output
                 ->set_content_type('application/json')
@@ -266,6 +269,9 @@ class Cron extends CI_Controller {
                 'status' => $result['success'] ? 'sent' : 'failed',
                 'jadwal' => count($schedules) . ' sesi'
             ];
+
+            // Fitur Anti-Ban: Jeda acak 5 sampai 10 detik sebelum mengirim ke tutor berikutnya
+            sleep(rand(5, 10));
         }
 
         $response = [
