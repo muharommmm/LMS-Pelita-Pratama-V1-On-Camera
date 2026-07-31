@@ -11,7 +11,8 @@ date_default_timezone_set('Asia/Jakarta');
 
 $scheme = (isset($_SERVER["HTTPS"]) && @$_SERVER["HTTPS"] == "on") ? "https" : "http";
 $config['base_url'] = "$scheme://".$_SERVER['HTTP_HOST'];
-$config['base_url'] .= preg_replace('@/+$@','',dirname($_SERVER['SCRIPT_NAME'])).'/';
+$script_dir = str_replace('\\', '/', dirname($_SERVER['SCRIPT_NAME']));
+$config['base_url'] .= preg_replace('@/+$@', '', $script_dir) . '/';
 
 $config['index_page'] = '';
 

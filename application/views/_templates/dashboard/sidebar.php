@@ -100,6 +100,9 @@
                     'name': 'Kehadiran & Absensi', 'link': 'absensi', 'icon': 'fas fa-user-check', 'cbt': '1'
                 },
                 {
+                    'name': 'Kotak Laporan Siswa', 'link': 'laporan', 'icon': 'fas fa-bullhorn', 'cbt': '1'
+                },
+                {
                     'name': 'Honorarium Tutor', 'link': 'honor', 'icon': 'fas fa-hand-holding-usd', 'cbt': '1'
                 },
                 {

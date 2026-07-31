@@ -151,6 +151,9 @@ $foto_profil = $siswa->foto ? base_url($siswa->foto) : base_url('assets/img/sisw
             <a class="flex items-center gap-3 text-on-surface-variant px-4 py-2.5 hover:bg-background rounded-lg text-sm font-medium transition-all" href="<?= base_url('chat') ?>">
                 <span class="material-symbols-outlined">chat</span> Chat
             </a>
+            <a class="flex items-center gap-3 text-on-surface-variant px-4 py-2.5 hover:bg-background rounded-lg text-sm font-medium transition-all" href="<?= base_url('laporan') ?>">
+                <span class="material-symbols-outlined">campaign</span> Lapor
+            </a>
             <a class="flex items-center gap-3 text-red-600 px-4 py-2.5 hover:bg-red-50 rounded-lg text-sm font-medium transition-all" href="<?= base_url('logout') ?>">
                 <span class="material-symbols-outlined">logout</span> Logout
             </a>
@@ -448,6 +451,12 @@ $foto_profil = $siswa->foto ? base_url($siswa->foto) : base_url('assets/img/sisw
                             </div>
                             <span class="text-xs font-semibold text-on-surface">Obrolan</span>
                         </a>
+                        <a class="lumina-card lumina-card-hover p-4 flex flex-col items-center text-center gap-3" href="<?= base_url('laporan') ?>">
+                            <div class="w-12 h-12 rounded-lg bg-pink-50 flex items-center justify-center text-pink-600">
+                                <span class="material-symbols-outlined text-2xl" style="font-variation-settings: 'FILL' 1;">campaign</span>
+                            </div>
+                            <span class="text-xs font-semibold text-on-surface">Lapor</span>
+                        </a>
                     </div>
                 </section>
             </div>
@@ -514,6 +523,12 @@ $foto_profil = $siswa->foto ? base_url($siswa->foto) : base_url('assets/img/sisw
                 <span class="material-symbols-outlined text-xl">chat</span>
             </div>
             <span class="text-[10px] font-semibold text-on-surface">Obrolan</span>
+        </a>
+        <a class="flex flex-col items-center text-center gap-2" href="<?= base_url('laporan') ?>">
+            <div class="w-10 h-10 rounded-lg bg-amber-50 flex items-center justify-center text-amber-600">
+                <span class="material-symbols-outlined text-xl">campaign</span>
+            </div>
+            <span class="text-[10px] font-semibold text-on-surface">Lapor</span>
         </a>
         <a class="flex flex-col items-center text-center gap-2 text-red-600" href="<?= base_url('logout') ?>">
             <div class="w-10 h-10 rounded-lg bg-red-50 flex items-center justify-center text-red-600">
