@@ -115,10 +115,6 @@
                                                     </td>
                                                 </tr>
                                             <?php endforeach; ?>
-                                        <?php else : ?>
-                                            <tr>
-                                                <td colspan="7" class="text-center text-muted">Belum ada aduan laporan insiden.</td>
-                                            </tr>
                                         <?php endif; ?>
                                     </tbody>
                                 </table>
@@ -310,10 +306,6 @@
                                                                     </td>
                                                                 </tr>
                                                             <?php endforeach; ?>
-                                                        <?php else : ?>
-                                                            <tr>
-                                                                <td colspan="6" class="text-center text-muted py-3">Belum ada pertanyaan kuesioner.</td>
-                                                            </tr>
                                                         <?php endif; ?>
                                                     </tbody>
                                                 </table>
