@@ -138,7 +138,7 @@ defined('BASEPATH') or exit('No direct script access allowed');
             <!-- Chat Room Grid Layout -->
             <div class="grid grid-cols-1 md:grid-cols-3 gap-6 relative overflow-hidden">
                 <!-- Contacts Card -->
-                <div id="chat-contacts-card" class="lumina-card flex flex-col h-[520px] overflow-hidden w-full md:block">
+                <div id="chat-contacts-card" class="lumina-card flex flex-col h-[520px] overflow-hidden w-full md:flex">
                     <div class="p-4 border-b border-outline-variant bg-primary/5">
                         <input type="text" id="cari-kontak" placeholder="Cari kontak..." class="w-full text-xs py-1.5 px-3 border border-outline-variant rounded-lg focus:outline-none focus:border-primary"/>
                     </div>
@@ -175,7 +175,7 @@ defined('BASEPATH') or exit('No direct script access allowed');
                 </div>
 
                 <!-- Chat Box Card -->
-                <div id="chat-box-card" class="lumina-card md:col-span-2 flex flex-col h-[520px] overflow-hidden w-full md:block hidden">
+                <div id="chat-box-card" class="lumina-card md:col-span-2 flex flex-col h-[520px] overflow-hidden w-full md:flex hidden">
                     <div class="p-4 border-b border-outline-variant bg-primary text-white flex justify-between items-center">
                         <div class="flex items-center gap-2 max-w-[80%]">
                             <button id="btn-back-to-contacts" class="md:hidden flex items-center justify-center p-1 rounded-full hover:bg-white/10 text-white mr-1">
