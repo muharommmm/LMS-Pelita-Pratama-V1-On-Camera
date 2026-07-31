@@ -324,7 +324,7 @@
 </div>
 
 <!-- Modal Tindak Lanjut Insiden -->
-<div class="modal fade" id="modalTindakLanjut" tabindex="-1" role="dialog" aria-labelledby="modalTindakLanjutLabel" aria-hidden="true">
+<div class="modal fade" id="modalTindakLanjut" tabindex="-1" role="dialog" aria-labelledby="modalTindakLanjutLabel">
     <div class="modal-dialog" role="document">
         <div class="modal-content">
             <div class="modal-header">
@@ -358,7 +358,7 @@
 </div>
 
 <!-- Modal Tambah Pertanyaan -->
-<div class="modal fade" id="modalTambahPertanyaan" tabindex="-1" role="dialog" aria-labelledby="modalTambahPertanyaanLabel" aria-hidden="true">
+<div class="modal fade" id="modalTambahPertanyaan" tabindex="-1" role="dialog" aria-labelledby="modalTambahPertanyaanLabel">
     <div class="modal-dialog" role="document">
         <div class="modal-content">
             <div class="modal-header">
@@ -396,7 +396,7 @@
 </div>
 
 <!-- Modal Edit Pertanyaan -->
-<div class="modal fade" id="modalEditPertanyaan" tabindex="-1" role="dialog" aria-labelledby="modalEditPertanyaanLabel" aria-hidden="true">
+<div class="modal fade" id="modalEditPertanyaan" tabindex="-1" role="dialog" aria-labelledby="modalEditPertanyaanLabel">
     <div class="modal-dialog" role="document">
         <div class="modal-content">
             <div class="modal-header">
