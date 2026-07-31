@@ -133,6 +133,35 @@ class Laporan extends CI_Controller {
         }
 
         if ($this->laporan->submit_evaluation($user->id, $id_guru, $answers, $tanggal_evaluasi)) {
+            // Deteksi kata kunci kuesioner negatif (Opsi 2)
+            $trigger_notif = false;
+            $flagged_answers = [];
+            foreach ($answers as $q_id => $ans_text) {
+                $ans_lower = strtolower($ans_text);
+                if (strpos($ans_lower, 'tidak hadir') !== false || strpos($ans_lower, 'terlambat') !== false || strpos($ans_lower, 'absen') !== false) {
+                    $trigger_notif = true;
+                    $flagged_answers[] = $ans_text;
+                }
+            }
+
+            if ($trigger_notif) {
+                $tutor = $this->db->where('id_guru', $id_guru)->get('master_guru')->row();
+                $tutor_name = $tutor ? $tutor->nama_guru : 'Tutor';
+                
+                $this->load->model('Notifikasi_model', 'notif');
+                $admin_users = $this->db->select('user_id')->where('group_id', 1)->get('users_groups')->result();
+                foreach ($admin_users as $admin) {
+                    $this->notif->createNotifikasi([
+                        'user_id' => $admin->user_id,
+                        'role'    => 'admin',
+                        'type'    => 'kuesioner_warning',
+                        'title'   => 'Peringatan Evaluasi Tutor',
+                        'body'    => "Siswa melaporkan $tutor_name: " . implode(', ', $flagged_answers),
+                        'url'     => 'laporan'
+                    ]);
+                }
+            }
+
             $this->session->set_flashdata('success', 'Rapor evaluasi tutor berhasil dikirim! Terima kasih atas masukan Anda.');
         } else {
             $this->session->set_flashdata('error', 'Gagal mengirim evaluasi.');
@@ -196,6 +225,19 @@ class Laporan extends CI_Controller {
         ];
 
         if ($this->laporan->insert_laporan_insiden($data)) {
+            // Kirim notifikasi insiden baru ke seluruh admin
+            $this->load->model('Notifikasi_model', 'notif');
+            $admin_users = $this->db->select('user_id')->where('group_id', 1)->get('users_groups')->result();
+            foreach ($admin_users as $admin) {
+                $this->notif->createNotifikasi([
+                    'user_id' => $admin->user_id,
+                    'role'    => 'admin',
+                    'type'    => 'insiden_baru',
+                    'title'   => 'Laporan Insiden Baru',
+                    'body'    => "Laporan aduan kategori '" . $data['kategori'] . "' baru masuk.",
+                    'url'     => 'laporan'
+                ]);
+            }
             $this->session->set_flashdata('success', 'Laporan insiden berhasil dikirim. Kami akan menindaklanjutinya dengan segera.');
         } else {
             $this->session->set_flashdata('error', 'Gagal menyimpan laporan.');

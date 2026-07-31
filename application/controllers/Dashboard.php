@@ -263,4 +263,109 @@
 
         $this->output_json(['status' => true, 'data' => $output]);
     }
+
+    /**
+     * AJAX Endpoint for Admin Dashboard to fetch real-time notifications
+     */
+    public function get_admin_notifications_ajax() {
+        if (!$this->ion_auth->logged_in() || !$this->ion_auth->is_admin()) {
+            $this->output_json(['status' => false, 'message' => 'Akses ditolak.']);
+            return;
+        }
+
+        $user = $this->ion_auth->user()->row();
+        $this->load->model('Notifikasi_model', 'notif');
+
+        // 1. Chat yang belum dibaca admin
+        $unread_chats = $this->notif->getLiveChatBelumDibaca($user->id, 5);
+        $unread_chats_count = count($unread_chats);
+
+        // 2. Aduan insiden baru yang pending
+        $pending_incidents_count = $this->notif->getLiveInsidenPendingCount();
+        $pending_incidents = $this->notif->getLiveInsidenPendingList(5);
+
+        // 3. Stored notifications (misal kuesioner_warning & insiden_baru)
+        $stored_notifs = $this->notif->getNotifikasiByUser($user->id, 10, true);
+
+        // Satukan daftar notifikasi untuk ditampilkan di navbar dropdown
+        $list_items = [];
+
+        // Gabungkan chat belum dibaca
+        foreach ($unread_chats as $c) {
+            $list_items[] = [
+                'type' => 'chat_masuk',
+                'title' => 'Pesan baru dari ' . $c->nama_pengirim,
+                'body' => substr($c->pesan, 0, 30) . '...',
+                'url' => base_url('chat?user=' . $c->pengirim_id),
+                'time' => $this->notif->formatAge($c->created_at),
+                'icon' => 'fas fa-comments text-info'
+            ];
+        }
+
+        // Gabungkan insiden pending
+        foreach ($pending_incidents as $i) {
+            $list_items[] = [
+                'type' => 'insiden_baru',
+                'title' => 'Aduan Pending: ' . $i->kategori,
+                'body' => 'Kejadian: ' . date('d-m-Y', strtotime($i->tanggal_kejadian)),
+                'url' => base_url('laporan'),
+                'time' => $this->notif->formatAge($i->tanggal),
+                'icon' => 'fas fa-exclamation-triangle text-danger'
+            ];
+        }
+
+        // Gabungkan stored notifications (kuesioner_warning, dll)
+        $pk_col = $this->db->field_exists('id_notif', 'dashboard_notifications') ? 'id_notif' : 'id';
+        foreach ($stored_notifs as $n) {
+            // Jangan duplikasi insiden_baru karena sudah ditarik secara live di atas
+            if ($n->type === 'insiden_baru') continue;
+
+            $icon = 'fas fa-bell text-secondary';
+            if ($n->type === 'kuesioner_warning') $icon = 'fas fa-user-slash text-warning';
+
+            $list_items[] = [
+                'id' => $n->$pk_col,
+                'type' => $n->type,
+                'title' => $n->title,
+                'body' => $n->body,
+                'url' => base_url($n->url),
+                'time' => $this->notif->formatAge($n->created_at),
+                'icon' => $icon
+            ];
+        }
+
+        // Hitung total notifikasi aktif untuk badge count
+        $total_count = $unread_chats_count + $pending_incidents_count;
+        foreach ($stored_notifs as $n) {
+            if ($n->type !== 'insiden_baru') {
+                $total_count++;
+            }
+        }
+
+        $this->output_json([
+            'status' => true,
+            'total_notif' => $total_count,
+            'items' => $list_items
+        ]);
+    }
+
+    /**
+     * AJAX Endpoint to mark admin notification as read
+     */
+    public function mark_admin_notif_read_ajax() {
+        if (!$this->ion_auth->logged_in() || !$this->ion_auth->is_admin()) {
+            $this->output_json(['status' => false, 'message' => 'Akses ditolak.']);
+            return;
+        }
+
+        $id = $this->input->post('id', true);
+        if ($id) {
+            $user = $this->ion_auth->user()->row();
+            $this->load->model('Notifikasi_model', 'notif');
+            $this->notif->markAsRead($id, $user->id);
+            $this->output_json(['status' => true]);
+        } else {
+            $this->output_json(['status' => false]);
+        }
+    }
 }

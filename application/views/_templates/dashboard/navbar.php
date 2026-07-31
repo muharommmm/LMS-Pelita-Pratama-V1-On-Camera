@@ -161,34 +161,22 @@
         </li>
         -->
         <!-- Notifications Dropdown Menu -->
-        <!--
-        <li class="nav-item dropdown">
-            <a class="nav-link" data-toggle="dropdown" href="#">
-                <i class="far fa-bell"></i>
-                <span class="badge badge-warning navbar-badge">15</span>
+        <li class="nav-item dropdown" id="admin-notification-bell">
+            <a class="nav-link" data-toggle="dropdown" href="#" aria-expanded="false">
+                <i class="far fa-bell text-lg"></i>
+                <span class="badge badge-danger navbar-badge d-none" id="admin-notif-badge">0</span>
             </a>
-            <div class="dropdown-menu dropdown-menu-lg dropdown-menu-right">
-                <span class="dropdown-item dropdown-header">15 Notifications</span>
+            <div class="dropdown-menu dropdown-menu-lg dropdown-menu-right shadow-lg" style="width: 280px; max-height: 380px; overflow-y: auto;">
+                <span class="dropdown-item dropdown-header font-weight-bold text-xs" id="admin-notif-header">0 Notifikasi</span>
                 <div class="dropdown-divider"></div>
-                <a href="#" class="dropdown-item">
-                    <i class="fas fa-envelope mr-2"></i> 4 new messages
-                    <span class="float-right text-muted text-sm">3 mins</span>
-                </a>
+                <div id="admin-notif-list">
+                    <!-- Dinamis terisi via AJAX -->
+                    <span class="dropdown-item text-center text-xs text-muted py-3">Tidak ada notifikasi baru</span>
+                </div>
                 <div class="dropdown-divider"></div>
-                <a href="#" class="dropdown-item">
-                    <i class="fas fa-users mr-2"></i> 8 friend requests
-                    <span class="float-right text-muted text-sm">12 hours</span>
-                </a>
-                <div class="dropdown-divider"></div>
-                <a href="#" class="dropdown-item">
-                    <i class="fas fa-file mr-2"></i> 3 new reports
-                    <span class="float-right text-muted text-sm">2 days</span>
-                </a>
-                <div class="dropdown-divider"></div>
-                <a href="#" class="dropdown-item dropdown-footer">See All Notifications</a>
+                <a href="<?= base_url('laporan') ?>" class="dropdown-item dropdown-footer text-xs font-weight-bold text-primary">Buka Laporan Aduan</a>
             </div>
         </li>
-        -->
         <!--
 		<li class="nav-item dropdown no-arrow">
 			<a class="nav-link dropdown-toggle" href="#" id="alertsDropdown" role="button" data-toggle="dropdown"

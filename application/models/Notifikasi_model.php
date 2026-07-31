@@ -693,4 +693,17 @@ class Notifikasi_model extends CI_Model {
         }
         return $then->format('d M Y');
     }
+
+    public function getLiveInsidenPendingCount() {
+        return $this->db->where('status', 'Pending')->count_all_results('laporan_insiden');
+    }
+
+    public function getLiveInsidenPendingList($limit = 5) {
+        $this->db->select('id_laporan, kategori, tanggal_kejadian, status, created_at as tanggal');
+        $this->db->from('laporan_insiden');
+        $this->db->where('status', 'Pending');
+        $this->db->order_by('created_at', 'DESC');
+        $this->db->limit($limit);
+        return $this->db->get()->result();
+    }
 }

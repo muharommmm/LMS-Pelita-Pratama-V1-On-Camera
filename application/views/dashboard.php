@@ -28,6 +28,26 @@
         <div class="container-fluid">
             <div class="row">
                 <div class="col-md-4">
+                    <!-- PANEL NOTIFIKASI PENTING ADMIN -->
+                    <div class="card card-danger my-shadow mb-3 border-left border-danger" style="border-left-width: 4px !important;">
+                        <div class="card-header bg-light">
+                            <div class="card-title font-weight-bold text-danger" style="font-size: 14px;">
+                                <i class="fas fa-exclamation-circle mr-2"></i> Notifikasi & Aduan Penting
+                            </div>
+                            <div class="card-tools">
+                                <span class="badge badge-danger text-xs px-2 d-none" id="admin-panel-notif-badge">0 Baru</span>
+                            </div>
+                        </div>
+                        <div class="card-body p-0" style="max-height: 350px; overflow-y: auto;">
+                            <div class="list-group list-group-flush" id="admin-panel-notif-list">
+                                <div class="text-center py-4 text-muted small">
+                                    <i class="fas fa-check-circle text-success fa-2x mb-2"></i>
+                                    <p class="mb-0">Semua aman! Tidak ada aduan atau chat pending.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
                     <div class="card card-primary my-shadow">
                         <div class="card-header">
                             <div class="card-title">

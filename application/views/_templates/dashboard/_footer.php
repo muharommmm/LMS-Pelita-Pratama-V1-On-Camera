@@ -166,6 +166,134 @@
         });
     }
 
+    <?php if ($this->ion_auth->logged_in() && $this->ion_auth->is_admin()) : ?>
+    $(document).ready(function() {
+        let lastNotifCount = 0;
+        let isFirstLoad = true;
+
+        function fetchAdminNotifications() {
+            $.ajax({
+                url: base_url + 'dashboard/get_admin_notifications_ajax',
+                type: 'GET',
+                dataType: 'json',
+                success: function(response) {
+                    if (response.status) {
+                        const total = response.total_notif;
+                        
+                        // Render badge & header
+                        if (total > 0) {
+                            $('#admin-notif-badge').text(total).removeClass('d-none');
+                            $('#admin-notif-header').text(total + ' Notifikasi Baru');
+                        } else {
+                            $('#admin-notif-badge').addClass('d-none');
+                            $('#admin-notif-header').text('0 Notifikasi');
+                        }
+
+                        // Render list items
+                        let html = '';
+                        if (response.items && response.items.length > 0) {
+                            response.items.forEach(function(item) {
+                                const clickAttr = item.id ? `onclick="markNotifRead(${item.id}, '${item.url}')"` : `href="${item.url}"`;
+                                html += `
+                                    <div class="dropdown-divider"></div>
+                                    <a ${item.id ? 'href="javascript:void(0)"' : ''} ${clickAttr} class="dropdown-item d-flex align-items-center py-2" style="white-space: normal;">
+                                        <div class="mr-3">
+                                            <div class="icon-circle">
+                                                <i class="${item.icon} fa-fw"></i>
+                                            </div>
+                                        </div>
+                                        <div style="flex: 1; min-width: 0;">
+                                            <div class="text-xs font-weight-bold text-dark">${item.title}</div>
+                                            <div class="text-[10px] text-muted text-truncate" style="max-width: 190px;">${item.body}</div>
+                                            <span class="float-right text-[9px] text-muted"><i class="far fa-clock mr-1"></i> ${item.time}</span>
+                                        </div>
+                                    </a>
+                                `;
+                            });
+                        } else {
+                            html = '<span class="dropdown-item text-center text-xs text-muted py-3">Tidak ada notifikasi baru</span>';
+                        }
+                        $('#admin-notif-list').html(html);
+
+                        // Render ke Dashboard Panel Utama (jika sedang membuka halaman dashboard)
+                        if ($('#admin-panel-notif-badge').length) {
+                            if (total > 0) {
+                                $('#admin-panel-notif-badge').text(total + ' Baru').removeClass('d-none');
+                            } else {
+                                $('#admin-panel-notif-badge').addClass('d-none');
+                            }
+                        }
+
+                        if ($('#admin-panel-notif-list').length) {
+                            let panelHtml = '';
+                            if (response.items && response.items.length > 0) {
+                                response.items.forEach(function(item) {
+                                    const clickAttr = item.id ? `onclick="markNotifRead(${item.id}, '${item.url}')"` : `href="${item.url}"`;
+                                    panelHtml += `
+                                        <a ${item.id ? 'href="javascript:void(0)"' : ''} ${clickAttr} class="list-group-item list-group-item-action d-flex align-items-start p-3 border-bottom border-light">
+                                            <div class="mr-3 mt-1">
+                                                <i class="${item.icon} fa-lg"></i>
+                                            </div>
+                                            <div style="flex: 1; min-width: 0;">
+                                                <div class="d-flex justify-content-between align-items-center mb-1">
+                                                    <span class="font-weight-bold text-xs text-dark">${item.title}</span>
+                                                    <span class="text-[10px] text-muted">${item.time}</span>
+                                                </div>
+                                                <div class="text-xs text-muted leading-relaxed">${item.body}</div>
+                                            </div>
+                                        </a>
+                                    `;
+                                });
+                            } else {
+                                panelHtml = `
+                                    <div class="text-center py-4 text-muted small">
+                                        <i class="fas fa-check-circle text-success fa-2x mb-2"></i>
+                                        <p class="mb-0">Semua aman! Tidak ada aduan atau chat pending.</p>
+                                    </div>
+                                `;
+                            }
+                            $('#admin-panel-notif-list').html(panelHtml);
+                        }
+
+                        // Munculkan popup toast jika ada penambahan notifikasi
+                        if (!isFirstLoad && total > lastNotifCount) {
+                            toastr.warning('Ada aduan insiden baru atau chat masuk yang memerlukan perhatian Anda!', 'Notifikasi Dashboard', {
+                                "closeButton": true,
+                                "progressBar": true,
+                                "positionClass": "toast-top-right",
+                                "timeOut": "8000"
+                            });
+                        }
+
+                        lastNotifCount = total;
+                        isFirstLoad = false;
+                    }
+                }
+            });
+        }
+
+        window.markNotifRead = function(id, redirectUrl) {
+            ajaxcsrf();
+            $.ajax({
+                url: base_url + 'dashboard/mark_admin_notif_read_ajax',
+                type: 'POST',
+                data: { id: id },
+                dataType: 'json',
+                success: function() {
+                    window.location.href = redirectUrl;
+                },
+                error: function() {
+                    window.location.href = redirectUrl;
+                }
+            });
+        };
+
+        // Jalankan fetch pertama kali dan pasang interval 30 detik
+        fetchAdminNotifications();
+        setInterval(fetchAdminNotifications, 30000);
+    });
+    <?php endif; ?>
+
 </script>
 
 </body>
