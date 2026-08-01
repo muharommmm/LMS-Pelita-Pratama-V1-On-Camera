@@ -307,6 +307,22 @@ var kelas_id_komunitas = null;
 var current_user_id = <?= $user->id ?>;
 var previous_messages_count = 0;
 
+function replaceURLWithHTMLLinks(text) {
+    if (!text) return "";
+    var exp = /(\b(https?|ftp|file):\/\/[-A-Z0-9+&@#\/%?=~_|!:,.;]*[-A-Z0-9+&@#\/%=~_|])/ig;
+    var text1 = text.replace(exp, '<a href="$1" target="_blank" class="text-white underline font-weight-bold break-all hover:opacity-85">$1</a>');
+    var exp2 = /(^|[^\/])(www\.[\S]+(\b|$))/gim;
+    return text1.replace(exp2, '$1<a href="http://$2" target="_blank" class="text-white underline font-weight-bold break-all hover:opacity-85">$2</a>');
+}
+
+function replaceURLWithHTMLLinksLeft(text) {
+    if (!text) return "";
+    var exp = /(\b(https?|ftp|file):\/\/[-A-Z0-9+&@#\/%?=~_|!:,.;]*[-A-Z0-9+&@#\/%=~_|])/ig;
+    var text1 = text.replace(exp, '<a href="$1" target="_blank" class="text-primary underline font-weight-bold break-all hover:opacity-85">$1</a>');
+    var exp2 = /(^|[^\/])(www\.[\S]+(\b|$))/gim;
+    return text1.replace(exp2, '$1<a href="http://$2" target="_blank" class="text-primary underline font-weight-bold break-all hover:opacity-85">$2</a>');
+}
+
 $(document).ready(function() {
 
     function scrollToBottom() {
@@ -354,7 +370,7 @@ $(document).ready(function() {
                             html += '<div class="flex items-end justify-end gap-2.5 direct-chat-msg">' +
                                     '  <div class="flex flex-col gap-1 max-w-[70%]">' +
                                     '    <span class="text-[10px] text-on-surface-variant text-right">' + displayName + ' &bull; ' + msg.created_at + '</span>' +
-                                    '    <div class="bg-primary text-white p-3 rounded-2xl rounded-tr-none text-xs shadow-sm direct-chat-text">' + msg.pesan + '</div>' +
+                                    '    <div class="bg-primary text-white p-3 rounded-2xl rounded-tr-none text-xs shadow-sm direct-chat-text">' + replaceURLWithHTMLLinks(msg.pesan) + '</div>' +
                                     '  </div>' +
                                     '  <img class="w-8 h-8 rounded-full border" src="<?= base_url() ?>' + msg.foto_pengirim + '" alt="avatar">' +
                                     '</div>';
@@ -364,7 +380,7 @@ $(document).ready(function() {
                                     '  <img class="w-8 h-8 rounded-full border" src="<?= base_url() ?>' + msg.foto_pengirim + '" alt="avatar">' +
                                     '  <div class="flex flex-col gap-1 max-w-[70%]">' +
                                     '    <span class="text-[10px] text-on-surface-variant">' + displayName + ' &bull; ' + msg.created_at + '</span>' +
-                                    '    <div class="bg-surface text-on-surface border border-outline-variant p-3 rounded-2xl rounded-tl-none text-xs shadow-sm direct-chat-text">' + msg.pesan + '</div>' +
+                                    '    <div class="bg-surface text-on-surface border border-outline-variant p-3 rounded-2xl rounded-tl-none text-xs shadow-sm direct-chat-text">' + replaceURLWithHTMLLinksLeft(msg.pesan) + '</div>' +
                                     '  </div>' +
                                     '</div>';
                         }

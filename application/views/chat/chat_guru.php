@@ -136,6 +136,14 @@ var kelas_id_komunitas = null;
 var current_user_id = <?= $user->id ?>;
 var previous_messages_count = 0;
 
+function replaceURLWithHTMLLinks(text) {
+    if (!text) return "";
+    var exp = /(\b(https?|ftp|file):\/\/[-A-Z0-9+&@#\/%?=~_|!:,.;]*[-A-Z0-9+&@#\/%=~_|])/ig;
+    var text1 = text.replace(exp, '<a href="$1" target="_blank" class="text-indigo-600 underline font-weight-bold break-all hover:text-indigo-800">$1</a>');
+    var exp2 = /(^|[^\/])(www\.[\S]+(\b|$))/gim;
+    return text1.replace(exp2, '$1<a href="http://$2" target="_blank" class="text-indigo-600 underline font-weight-bold break-all hover:text-indigo-800">$2</a>');
+}
+
 $(document).ready(function() {
     function scrollToBottom() {
         var chatArea = $('#area-pesan');
@@ -180,7 +188,7 @@ $(document).ready(function() {
                         
                         html += '<div class="chat-bubble ' + bubbleClass + '">' +
                                 (!isRight ? '<div class="chat-name">' + displayName + '</div>' : '') +
-                                '<div class="chat-text text-sm text-slate-800">' + msg.pesan + '</div>' +
+                                '<div class="chat-text text-sm text-slate-800">' + replaceURLWithHTMLLinks(msg.pesan) + '</div>' +
                                 '<div class="chat-meta">' + msg.created_at + '</div>' +
                                 '</div>';
                     });
