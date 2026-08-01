@@ -96,23 +96,23 @@ class Cron extends CI_Controller {
     }
 
     /**
-     * Format info metode belajar berdasarkan jenis_kegiatan.
+     * Format info metode belajar berdasarkan jenis_kegiatan (Minimalis).
      */
     private function format_metode($jenis_kegiatan) {
         $jenis = strtolower(trim($jenis_kegiatan));
         switch ($jenis) {
             case 'online':
-                return "🟢 *Online* — Silahkan akses link Zoom di lms.ujianpelitapratama.com";
+                return "Online";
             case 'tugas':
-                return "📝 *Tugas Mandiri* — Silahkan kirim tugas di LMS";
+                return "Tugas LMS";
             case 'offline':
             default:
-                return "🏫 *Offline* — Pembelajaran dilakukan di sekolah";
+                return "Offline";
         }
     }
 
     /**
-     * Bangun pesan WhatsApp untuk satu tutor.
+     * Bangun pesan WhatsApp untuk satu tutor (Opsi 3 - Minimalis).
      * 
      * @param string $nama_guru Nama tutor
      * @param array  $schedules Array jadwal hari ini
@@ -120,26 +120,31 @@ class Cron extends CI_Controller {
      * @return string
      */
     private function build_message($nama_guru, $schedules, $tanggal_str) {
-        $msg  = "🔔 *Reminder Jadwal Mengajar*\n";
-        $msg .= "Halo, Bpk/Ibu {$nama_guru}!\n\n";
-        $msg .= "Berikut jadwal mengajar Anda hari ini ({$tanggal_str}):\n\n";
+        $msg  = "🔔 *Jadwal Mengajar - {$tanggal_str}*\n";
+        $msg .= "Halo Bpk/Ibu {$nama_guru}!\n\n";
 
         $i = 1;
         foreach ($schedules as $s) {
-            $mapel = isset($s->nama_mapel) ? $s->nama_mapel : 'N/A';
+            // Gunakan Kode Mapel jika ada, jika tidak pakai Nama Mapel
+            $mapel = (!empty($s->kode)) ? $s->kode : (isset($s->nama_mapel) ? $s->nama_mapel : 'N/A');
+            
+            // Persingkat nama kelas
             $kelas = isset($s->nama_kelas) ? $s->nama_kelas : 'N/A';
+            $kelas = str_replace(
+                ['NON REGULER', 'REGULER', 'non reguler', 'reguler'], 
+                ['N-REG', 'REG', 'N-REG', 'REG'], 
+                $kelas
+            );
+            
             $start = isset($s->start_time) ? substr($s->start_time, 0, 5) : '??:??';
-            $end   = isset($s->end_time) ? substr($s->end_time, 0, 5) : '??:??';
             $jenis = isset($s->jenis_kegiatan) ? $s->jenis_kegiatan : 'offline';
+            $metode = $this->format_metode($jenis);
 
-            $msg .= "{$i}. 📚 {$mapel} – Kelas {$kelas}\n";
-            $msg .= "   ⏰ {$start} - {$end}\n";
-            $msg .= "   " . $this->format_metode($jenis) . "\n\n";
+            $msg .= "{$i}. {$mapel} ({$kelas}) - {$start} [{$metode}]\n";
             $i++;
         }
 
-        $msg .= "Selamat mengajar! 🎓\n";
-        $msg .= "— LMS Pelita Pratama";
+        $msg .= "\nLMS Pelita Pratama 🎓";
 
         return $msg;
     }
