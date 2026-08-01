@@ -866,12 +866,17 @@
                               body = 'Pesan dari: ' + item.nama_siswa;
                               icon = '<i class="fas fa-comments text-indigo-500"></i>';
                               url = 'chat?user=' + (item.id_referensi || '');
+                          } else if (item.tipe === 'kuesioner_warning_tutor') {
+                              title = item.judul;
+                              body = item.nama_siswa;
+                              icon = '<i class="fas fa-exclamation-triangle text-rose-500"></i>';
+                              url = 'laporan';
                           }
                           var feedItem = {
                               title: title,
                               body: body,
                               icon: icon,
-                              color: 'primary',
+                              color: item.tipe === 'kuesioner_warning_tutor' ? 'danger' : 'primary',
                               url: url,
                               age_label: item.waktu
                           };
@@ -912,6 +917,4 @@
         // Polling setiap 30 detik
         feedInterval = setInterval(loadFeedGuru, 30000);
     });
-
 </script>
-

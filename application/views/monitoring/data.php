@@ -431,6 +431,77 @@ defined('BASEPATH') OR exit('No direct script access allowed');
                                         </div>
                                     </div>
                                 </div>
+
+                                <!-- Row 2.5: Jadwal Mengajar Tutor -->
+                                <div class="row">
+                                    <div class="col-12 mb-4">
+                                        <div class="card my-shadow border border-success">
+                                            <div class="card-header bg-light py-2">
+                                                <h6 class="font-weight-bold text-success mb-0"><i class="fas fa-calendar-alt mr-2 text-success"></i> Jadwal Mengajar Tutor (Jadwal Fleksibel Terkonsolidasi)</h6>
+                                            </div>
+                                            <div class="card-body p-0 table-responsive" style="max-height: 250px; overflow-y: auto;">
+                                                <table class="table table-sm table-striped mb-0 text-xs">
+                                                    <thead>
+                                                        <tr>
+                                                            <th>Hari</th>
+                                                            <th>Jam / Waktu</th>
+                                                            <th>Kelas</th>
+                                                            <th>Mata Pelajaran</th>
+                                                            <th>Pola & Kegiatan (Metode Ajar)</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody id="tbl-tutor-jadwal">
+                                                        <tr><td colspan="5" class="text-center text-muted py-3">Tidak ada jadwal mengajar terdaftar</td></tr>
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Row 3: Rapor Evaluasi & Pengaduan Siswa -->
+                                <div class="row">
+                                    <div class="col-12 mb-4">
+                                        <div class="card my-shadow border border-danger">
+                                            <div class="card-header bg-light py-2">
+                                                <h6 class="font-weight-bold text-danger mb-0">
+                                                    <i class="fas fa-exclamation-triangle mr-2 text-danger"></i> Rapor Evaluasi & Masukan Laporan Siswa terhadap Tutor
+                                                </h6>
+                                            </div>
+                                            <div class="card-body">
+                                                <div class="row">
+                                                    <!-- Kolom Kuesioner Pilihan Ganda -->
+                                                    <div class="col-md-6 border-right">
+                                                        <h6 class="font-weight-bold text-xs text-muted uppercase tracking-wider mb-3"><i class="fas fa-list-ol mr-1"></i> Rekapitulasi Penilaian Pilihan Ganda</h6>
+                                                        <div class="table-responsive" style="max-height: 250px; overflow-y: auto;">
+                                                            <table class="table table-sm table-striped mb-0 text-xs">
+                                                                <thead>
+                                                                    <tr>
+                                                                        <th>Pertanyaan</th>
+                                                                        <th>Jawaban Siswa</th>
+                                                                        <th>Tanggal Kelas</th>
+                                                                    </tr>
+                                                                </thead>
+                                                                <tbody id="tbl-tutor-eval-choices">
+                                                                    <tr><td colspan="3" class="text-center text-muted py-3">Belum ada data kuesioner</td></tr>
+                                                                </tbody>
+                                                            </table>
+                                                        </div>
+                                                    </div>
+                                                    
+                                                    <!-- Kolom Kritik & Saran Teks -->
+                                                    <div class="col-md-6">
+                                                        <h6 class="font-weight-bold text-xs text-muted uppercase tracking-wider mb-3"><i class="fas fa-comment-dots mr-1"></i> Saran & Kritik Aduan Siswa (Teks)</h6>
+                                                        <div class="list-group list-group-flush" id="list-tutor-eval-comments" style="max-height: 250px; overflow-y: auto;">
+                                                            <div class="text-center text-muted py-3 small">Belum ada kritik & saran yang dilaporkan.</div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
                             </div>
                         </div>
                     </div>
@@ -742,6 +813,55 @@ defined('BASEPATH') OR exit('No direct script access allowed');
                             htmlCbt = '<tr><td colspan="3" class="text-center text-muted py-3">Semua jawaban esai CBT telah dikoreksi</td></tr>';
                         }
                         $('#tbl-tutor-cbt-pending').html(htmlCbt);
+
+                        // Render Evaluasi Pilihan Ganda (Choices)
+                        var htmlEvalChoices = '';
+                        if(res.evaluasi.choices.length > 0) {
+                            $.each(res.evaluasi.choices, function(i, v) {
+                                htmlEvalChoices += '<tr>' +
+                                    '<td><strong>' + v.pertanyaan + '</strong></td>' +
+                                    '<td><span class="badge badge-pill badge-primary font-weight-semibold text-xs px-2 py-1">' + v.jawaban + '</span></td>' +
+                                    '<td><small class="text-muted"><i class="far fa-calendar-alt mr-1"></i>' + v.tanggal_evaluasi + '</small></td>' +
+                                    '</tr>';
+                            });
+                        } else {
+                            htmlEvalChoices = '<tr><td colspan="3" class="text-center text-muted py-3">Tidak ada data kuesioner pilihan ganda untuk tutor ini</td></tr>';
+                        }
+                        $('#tbl-tutor-eval-choices').html(htmlEvalChoices);
+
+                        // Render Evaluasi Kritik & Saran (Comments)
+                        var htmlEvalComments = '';
+                        if(res.evaluasi.comments.length > 0) {
+                            $.each(res.evaluasi.comments, function(i, v) {
+                                htmlEvalComments += '<div class="list-group-item bg-white p-3 mb-2 rounded shadow-sm border border-slate-100">' +
+                                    '<p class="mb-1 text-sm font-semibold text-dark">"' + v.jawaban + '"</p>' +
+                                    '<div class="d-flex justify-content-between text-[10px] text-muted mt-2">' +
+                                    '  <span><i class="far fa-question-circle mr-1"></i>Topik: ' + v.pertanyaan + '</span>' +
+                                    '  <span><i class="far fa-clock mr-1"></i>Dikirim: ' + v.tanggal_kirim + '</span>' +
+                                    '</div>' +
+                                    '</div>';
+                            });
+                        } else {
+                            htmlEvalComments = '<div class="text-center text-muted py-3 small">Belum ada saran & kritik tertulis untuk tutor ini.</div>';
+                        }
+                        $('#list-tutor-eval-comments').html(htmlEvalComments);
+
+                        // Render Jadwal Mengajar Tutor (Terkonsolidasi)
+                        var htmlTutorJadwal = '';
+                        if(res.jadwal.length > 0) {
+                            $.each(res.jadwal, function(i, v) {
+                                htmlTutorJadwal += '<tr>' +
+                                    '<td class="font-weight-bold">' + v.hari + '</td>' +
+                                    '<td>' + v.waktu + '</td>' +
+                                    '<td><span class="badge badge-info">' + v.kelas + '</span></td>' +
+                                    '<td>' + v.mapel + '</td>' +
+                                    '<td><span class="text-secondary font-weight-semibold">' + v.pola_kegiatan + '</span></td>' +
+                                    '</tr>';
+                            });
+                        } else {
+                            htmlTutorJadwal = '<tr><td colspan="5" class="text-center text-muted py-3">Tidak ada jadwal mengajar fleksibel untuk tutor ini</td></tr>';
+                        }
+                        $('#tbl-tutor-jadwal').html(htmlTutorJadwal);
 
                         $('#tutor-result-container').removeClass('d-none');
                     } else {

@@ -84,6 +84,7 @@ if (!isset($guru) || !isset($guru->id_jabatan) || !isset($guru->nama_guru)) {
                         {'name': "E-Book Pelajaran", 'link': "ebooks", 'icon': 'fa fa-book'},
                         {'name': "Kehadiran & Absensi", 'link': "absensi", 'icon': 'fa fa-user-check'},
                         {'name': "Honorarium Saya", 'link': "honor", 'icon': 'fa fa-hand-holding-usd'},
+                        {'name': "Rapor Evaluasi KBM", 'link': "laporan", 'icon': 'fa fa-clipboard-list'},
                     ]
                 },
                 {

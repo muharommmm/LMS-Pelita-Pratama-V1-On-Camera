@@ -149,7 +149,26 @@
               AND (l.text IS NOT NULL OR l.file IS NOT NULL OR l.finish_time IS NOT NULL)
         ";
 
-        $sql = "($sql_tugas) UNION ($sql_ujian) UNION ($sql_chat) UNION ($sql_materi) ORDER BY waktu DESC LIMIT 15";
-        return $this->db->query($sql, array($id_guru, $id_guru, $id_user, $id_guru))->result();
+        $pk_col = $this->db->field_exists('id_notif', 'dashboard_notifications') ? 'id_notif' : 'id';
+        $sql_notif = "
+            SELECT 
+                $pk_col as id,
+                'kuesioner_warning_tutor' as tipe,
+                title as judul,
+                body as nama_siswa,
+                url as id_referensi,
+                0 as id_mapel,
+                0 as id_siswa,
+                0 as id_kelas,
+                created_at as waktu,
+                is_read as is_read
+            FROM dashboard_notifications
+            WHERE user_id = ? 
+              AND type = 'kuesioner_warning_tutor'
+              AND is_read = 0
+        ";
+
+        $sql = "($sql_tugas) UNION ($sql_ujian) UNION ($sql_chat) UNION ($sql_materi) UNION ($sql_notif) ORDER BY waktu DESC LIMIT 15";
+        return $this->db->query($sql, array($id_guru, $id_guru, $id_user, $id_guru, $id_user))->result();
     }
 }

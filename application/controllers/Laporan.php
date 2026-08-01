@@ -70,6 +70,28 @@ class Laporan extends CI_Controller {
 
                 // Load modern standalone view
                 $this->load->view('laporan/lapor_siswa', $data);
+            } elseif ($this->ion_auth->in_group('guru')) {
+                // Guru View: Lihat Rapor Kuesioner Evaluasi
+                $guru = $this->dashboard->getDataGuruByUserId($user->id, $id_tp, $id_smt);
+                if (!$guru) {
+                    show_error('Profil guru tidak ditemukan.', 404);
+                }
+
+                // Otomatis tandai notifikasi peringatan kuesioner guru ini sebagai dibaca
+                $this->db->where('user_id', $user->id)
+                         ->where('type', 'kuesioner_warning_tutor')
+                         ->update('dashboard_notifications', ['is_read' => 1]);
+
+                $data['judul'] = 'Rapor Evaluasi KBM Anda';
+                $data['subjudul'] = 'Daftar masukan dan evaluasi KBM dari siswa';
+                $data['guru'] = $guru;
+
+                // Ambil rekapitulasi evaluasi untuk guru ini
+                $data['evaluasi'] = $this->laporan->get_rekap_evaluasi_guru($guru->id_guru);
+
+                $this->load->view('members/guru/templates/header', $data);
+                $this->load->view('members/guru/rapor/kuesioner', $data);
+                $this->load->view('members/guru/templates/footer');
             } else {
                 show_error('Akses ditolak. Peran Anda tidak diizinkan untuk melihat menu ini.', 403);
             }
@@ -149,6 +171,8 @@ class Laporan extends CI_Controller {
                 $tutor_name = $tutor ? $tutor->nama_guru : 'Tutor';
                 
                 $this->load->model('Notifikasi_model', 'notif');
+                
+                // 1. Kirim ke Admin
                 $admin_users = $this->db->select('user_id')->where('group_id', 1)->get('users_groups')->result();
                 foreach ($admin_users as $admin) {
                     $this->notif->createNotifikasi([
@@ -158,6 +182,19 @@ class Laporan extends CI_Controller {
                         'title'   => 'Peringatan Evaluasi Tutor',
                         'body'    => "Siswa melaporkan $tutor_name: " . implode(', ', $flagged_answers),
                         'url'     => 'laporan'
+                    ]);
+                }
+
+                // 2. Kirim ke Tutor yang bersangkutan (Secara Anonim)
+                if ($tutor && !empty($tutor->id_user)) {
+                    $tgl_eval_str = !empty($tanggal_evaluasi) ? " pada tanggal " . date('d-m-Y', strtotime($tanggal_evaluasi)) : "";
+                    $this->notif->createNotifikasi([
+                        'user_id' => $tutor->id_user,
+                        'role'    => 'guru',
+                        'type'    => 'kuesioner_warning_tutor',
+                        'title'   => 'Peringatan Kehadiran KBM',
+                        'body'    => "Siswa melaporkan bahwa Anda terlambat / tidak hadir{$tgl_eval_str}. Detail masukan: " . implode(', ', $flagged_answers),
+                        'url'     => 'laporan' // Mengarahkan guru ke halaman Rapor Evaluasi KBM mereka
                     ]);
                 }
             }

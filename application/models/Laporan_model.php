@@ -284,4 +284,36 @@ class Laporan_model extends CI_Model {
     public function get_laporan_by_id($id) {
         return $this->db->where('id_laporan', $id)->get('laporan_insiden')->row();
     }
+
+    public function get_rekap_evaluasi_guru($id_guru) {
+        // Count total responses
+        $this->db->select('COUNT(DISTINCT(tanggal)) as total_resp');
+        $this->db->from('rapor_tutor_jawaban');
+        $this->db->where('id_guru', $id_guru);
+        $total_resp = $this->db->get()->row()->total_resp;
+
+        // Fetch answers for textual comments
+        $this->db->select('j.jawaban, j.tanggal, j.tanggal_evaluasi, p.pertanyaan');
+        $this->db->from('rapor_tutor_jawaban j');
+        $this->db->join('rapor_tutor_pertanyaan p', 'p.id_pertanyaan = j.id_pertanyaan');
+        $this->db->where('j.id_guru', $id_guru);
+        $this->db->where('p.tipe', 'teks');
+        $this->db->order_by('j.tanggal', 'DESC');
+        $comments = $this->db->get()->result();
+
+        // Fetch multiple choice summaries with evaluated dates
+        $this->db->select('j.jawaban, j.tanggal_evaluasi, p.pertanyaan');
+        $this->db->from('rapor_tutor_jawaban j');
+        $this->db->join('rapor_tutor_pertanyaan p', 'p.id_pertanyaan = j.id_pertanyaan');
+        $this->db->where('j.id_guru', $id_guru);
+        $this->db->where('p.tipe', 'pilihan');
+        $this->db->order_by('j.tanggal_evaluasi', 'DESC');
+        $choices = $this->db->get()->result();
+
+        return [
+            'total_responses' => $total_resp,
+            'comments' => $comments,
+            'choices' => $choices
+        ];
+    }
 }

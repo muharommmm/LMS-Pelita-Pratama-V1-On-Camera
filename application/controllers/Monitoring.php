@@ -476,6 +476,73 @@ class Monitoring extends CI_Controller {
             }
         }
 
+        // 6. Rapor Evaluasi / Laporan Masukan dari Siswa (Kuesioner)
+        $evaluations = [];
+        if ($this->db->table_exists('rapor_tutor_jawaban') && $this->db->table_exists('rapor_tutor_pertanyaan')) {
+            $this->db->select('j.jawaban, j.tanggal, j.tanggal_evaluasi, p.pertanyaan, p.tipe');
+            $this->db->from('rapor_tutor_jawaban j');
+            $this->db->join('rapor_tutor_pertanyaan p', 'p.id_pertanyaan = j.id_pertanyaan');
+            $this->db->where('j.id_guru', $id_guru);
+            $this->db->order_by('j.tanggal', 'DESC');
+            $evaluations = $this->db->get()->result();
+        }
+
+        $eval_comments = [];
+        $eval_choices = [];
+
+        foreach ($evaluations as $eval) {
+            if ($eval->tipe === 'teks') {
+                $eval_comments[] = [
+                    'pertanyaan' => $eval->pertanyaan,
+                    'jawaban' => $eval->jawaban,
+                    'tanggal_evaluasi' => !empty($eval->tanggal_evaluasi) ? date('d-m-Y', strtotime($eval->tanggal_evaluasi)) : '-',
+                    'tanggal_kirim' => date('d-m-Y H:i', strtotime($eval->tanggal))
+                ];
+            } else {
+                $eval_choices[] = [
+                    'pertanyaan' => $eval->pertanyaan,
+                    'jawaban' => $eval->jawaban,
+                    'tanggal_evaluasi' => !empty($eval->tanggal_evaluasi) ? date('d-m-Y', strtotime($eval->tanggal_evaluasi)) : '-',
+                    'tanggal_kirim' => date('d-m-Y H:i', strtotime($eval->tanggal))
+                ];
+            }
+        }
+
+        // 7. Seluruh Jadwal Mengajar Tutor (Terkonsolidasi)
+        $this->load->model('Jadwal_fleksibel_model', 'jf_model');
+        $jadwal_raw = $this->jf_model->get_schedules_by_tutor($id_guru, $tp->id_tp, $smt->id_smt);
+        
+        $hari_nama = ['', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu', 'Minggu'];
+        $grouped_schedules = [];
+
+        foreach ($jadwal_raw as $j) {
+            // Key berdasarkan Hari + Waktu + Kelas + Mapel
+            $key = $j->day . '_' . $j->start_time . '_' . $j->end_time . '_' . $j->class_id . '_' . $j->mapel_id;
+            
+            $pola = $j->pola_mingguan; // Semua / Ganjil / Genap
+            $kegiatan = ucfirst($j->jenis_kegiatan); // Online / Offline / Tugas
+            $pola_kegiatan_str = "{$pola} ({$kegiatan})";
+            
+            if (!isset($grouped_schedules[$key])) {
+                $grouped_schedules[$key] = [
+                    'hari' => $hari_nama[$j->day] ?? '-',
+                    'waktu' => date('H:i', strtotime($j->start_time)) . ' - ' . date('H:i', strtotime($j->end_time)),
+                    'mapel' => $j->nama_mapel,
+                    'kelas' => $j->nama_kelas,
+                    'pola_kegiatan' => [$pola_kegiatan_str]
+                ];
+            } else {
+                // Tambahkan pola kegiatan baru ke dalam key yang sama
+                $grouped_schedules[$key]['pola_kegiatan'][] = $pola_kegiatan_str;
+            }
+        }
+        
+        $jadwal_tutor = [];
+        foreach ($grouped_schedules as $gs) {
+            $gs['pola_kegiatan'] = implode(' / ', $gs['pola_kegiatan']);
+            $jadwal_tutor[] = $gs;
+        }
+
         $this->output_json([
             'status' => true,
             'guru' => [
@@ -489,7 +556,12 @@ class Monitoring extends CI_Controller {
             'tugas_details' => $tugas_stats,
             'honor' => $honor_rekap,
             'chat' => $comments_data,
-            'cbt_pending' => $pending_cbt_grading
+            'cbt_pending' => $pending_cbt_grading,
+            'evaluasi' => [
+                'comments' => $eval_comments,
+                'choices' => $eval_choices
+            ],
+            'jadwal' => $jadwal_tutor
         ]);
     }
 }
