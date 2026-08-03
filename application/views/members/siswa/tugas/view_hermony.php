@@ -800,9 +800,9 @@ $avatar_guru = !empty($tugas->foto) ? base_url($tugas->foto) : base_url('assets/
             
             let innerHTML = "";
             if (file.type.match('image')) {
-                innerHTML = "<img src='" + file.src + "'/>";
+                innerHTML = "<img src='" + base_url + file.src + "'/>";
             } else if (file.type.match('video')) {
-                innerHTML = "<video src='" + file.src + "'></video>";
+                innerHTML = "<video src='" + base_url + file.src + "'></video>";
             } else {
                 innerHTML = "<img src='" + base_url + "/assets/app/img/document_file.png' class='p-3' style='object-fit: contain'/>";
             }

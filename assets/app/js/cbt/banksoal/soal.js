@@ -1004,7 +1004,7 @@ function createPreviewFile(/*elem, event*/) {
                         "</div>";
                     $("#media-list").prepend(div);
                 } else if (file.type.match('video')) {
-                    div.innerHTML = "<video src='" + file.src + "'></video>" +
+                    div.innerHTML = "<video src='" + base_url + file.src + "'></video>" +
                         "<div class='post-thumb'>" +
                         "<div  class='inner-post-thumb'>" +
                         "<a href='javascript:void(0);' data-id='" + file.alias + "' class='remove-pic'>" +
