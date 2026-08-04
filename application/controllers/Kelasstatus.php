@@ -95,4 +95,51 @@
             }
             $this->output_json(['status' => true, 'message' => 'Nilai berhasil disimpan dan diamankan!']); 
         }
-    } private function sendGradingNotification($id_log, $nilai, $catatan) { $log_entry = $this->db->where(["id_log" => $id_log])->get("log_materi")->row(); if ($log_entry) { $id_siswa = $log_entry->id_siswa; $id_materi = $log_entry->id_materi; $siswa = $this->db->where(['id_siswa' => $id_siswa])->get('master_siswa')->row(); if ($siswa) { $user_siswa = $this->db->where(['username' => $siswa->username])->get('users')->row(); if ($user_siswa) { $materi = $this->db->where(['id_materi' => $id_materi])->get('kelas_materi')->row(); $materi_title = $materi ? $materi->judul_materi : 'Tugas'; $this->load->model('Notifikasi_model', 'notif_m'); $this->notif_m->createNotifikasi([ 'user_id' => $user_siswa->id, 'role' => 'siswa', 'type' => 'nilai_keluar', 'title' => 'Nilai tugas keluar: ' . $nilai, 'body' => $materi_title . ($catatan ? ' — Catatan: ' . $catatan : ''), 'url' => 'siswa/hasil', 'metadata' => [ 'id_materi' => $id_materi, 'nilai' => $nilai ] ]); } } } } }
+    } 
+    private function sendGradingNotification($id_log, $nilai, $catatan) { 
+        $log_entry = $this->db->where(["id_log" => $id_log])->get("log_materi")->row(); 
+        if ($log_entry) { 
+            $id_siswa = $log_entry->id_siswa; 
+            $id_materi = $log_entry->id_materi; 
+            $siswa = $this->db->where(['id_siswa' => $id_siswa])->get('master_siswa')->row(); 
+            if ($siswa) { 
+                $user_siswa = $this->db->where(['username' => $siswa->username])->get('users')->row(); 
+                if ($user_siswa) { 
+                    $materi = $this->db->where(['id_materi' => $id_materi])->get('kelas_materi')->row(); 
+                    $materi_title = $materi ? $materi->judul_materi : 'Tugas'; 
+                    $this->load->model('Notifikasi_model', 'notif_m'); 
+                    
+                    $is_redo = ((string)$nilai === '0' || (float)$nilai === 0.0);
+                    if ($is_redo) {
+                        $this->notif_m->createNotifikasi([ 
+                            'user_id'  => $user_siswa->id, 
+                            'role'     => 'siswa', 
+                            'type'     => 'tugas_diulang', 
+                            'title'    => 'Tugas Perlu Diulang: ' . $materi_title, 
+                            'body'     => 'Tutor memberi nilai 0.' . ($catatan ? ' Catatan: ' . $catatan : ' Silakan perbaiki dan kirimkan kembali tugas Anda.'), 
+                            'url'      => 'siswa/bukatugas/' . $id_materi . '/0', 
+                            'metadata' => [ 
+                                'id_materi' => $id_materi, 
+                                'nilai'     => $nilai,
+                                'is_redo'   => true
+                            ] 
+                        ]);
+                    } else {
+                        $this->notif_m->createNotifikasi([ 
+                            'user_id'  => $user_siswa->id, 
+                            'role'     => 'siswa', 
+                            'type'     => 'nilai_keluar', 
+                            'title'    => 'Nilai tugas keluar: ' . $nilai, 
+                            'body'     => $materi_title . ($catatan ? ' — Catatan: ' . $catatan : ''), 
+                            'url'      => 'siswa/hasil', 
+                            'metadata' => [ 
+                                'id_materi' => $id_materi, 
+                                'nilai'     => $nilai 
+                            ] 
+                        ]);
+                    }
+                } 
+            } 
+        } 
+    }
+}

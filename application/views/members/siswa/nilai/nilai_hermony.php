@@ -180,17 +180,34 @@ $foto_profil = $siswa->foto ? base_url($siswa->foto) : base_url('assets/img/sisw
                         <div class="lumina-card p-6 text-center text-on-surface-variant text-sm">Belum ada nilai tugas.</div>
                     <?php else : ?>
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <?php foreach ($nilai_tugas as $nil) : ?>
-                                <div class="lumina-card p-5 flex justify-between items-center gap-4">
+                            <?php foreach ($nilai_tugas as $nil) : 
+                                $is_redo_val = ($nil->nilai !== null && ((string)$nil->nilai === '0' || (float)$nil->nilai === 0.0));
+                            ?>
+                                <div class="lumina-card p-5 flex justify-between items-center gap-4 <?= $is_redo_val ? 'border-amber-300 bg-amber-50/30' : '' ?>">
                                     <div class="space-y-1">
-                                        <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-indigo-50 text-indigo-700">
-                                            <?= htmlspecialchars($nil->kode) ?>
-                                        </span>
+                                        <div class="flex items-center gap-2">
+                                            <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-indigo-50 text-indigo-700">
+                                                <?= htmlspecialchars($nil->kode) ?>
+                                            </span>
+                                            <?php if ($is_redo_val) : ?>
+                                                <span class="px-2 py-0.5 rounded text-[9px] font-bold bg-amber-100 text-amber-800 border border-amber-300">
+                                                    Perlu Diulang
+                                                </span>
+                                            <?php endif; ?>
+                                        </div>
                                         <h4 class="font-headline font-bold text-sm text-on-surface leading-tight mt-1"><?= htmlspecialchars($nil->judul_materi) ?></h4>
                                         <p class="text-xs text-on-surface-variant">Tanggal: <?= date('d M Y', strtotime($nil->jadwal_materi)) ?></p>
+                                        <?php if ($is_redo_val && !empty($nil->catatan)) : ?>
+                                            <p class="text-[11px] text-amber-800 italic mt-1"><i class="fas fa-info-circle mr-1"></i>Catatan: <?= htmlspecialchars($nil->catatan) ?></p>
+                                        <?php endif; ?>
                                     </div>
-                                    <div class="text-right">
-                                        <span class="text-2xl font-bold text-indigo-600 font-headline"><?= $nil->nilai ?></span>
+                                    <div class="text-right flex flex-col items-end gap-1">
+                                        <span class="text-2xl font-bold <?= $is_redo_val ? 'text-amber-600' : 'text-indigo-600' ?> font-headline"><?= $nil->nilai ?></span>
+                                        <?php if ($is_redo_val) : ?>
+                                            <a href="<?= base_url('siswa/bukatugas/' . (isset($nil->id_materi) ? $nil->id_materi : '') . '/0') ?>" class="inline-flex items-center gap-1 text-[10px] font-bold text-amber-700 bg-amber-100 hover:bg-amber-200 px-2 py-1 rounded transition-colors">
+                                                <span class="material-symbols-outlined text-xs">edit</span> Ulangi
+                                            </a>
+                                        <?php endif; ?>
                                     </div>
                                 </div>
                             <?php endforeach; ?>

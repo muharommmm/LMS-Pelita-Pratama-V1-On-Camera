@@ -276,7 +276,7 @@ class Notifikasi_model extends CI_Model {
         $this->db->select('km.id_materi, km.judul_materi, km.deadline, km.id_guru, km.tgl_mulai,
             mg.nama_guru,
             DATEDIFF(km.deadline, NOW()) as sisa_hari,
-            (SELECT COUNT(*) FROM log_materi lm WHERE lm.id_materi=km.id_materi AND lm.id_siswa='. (int)$id_siswa .' AND lm.finish_time IS NOT NULL) as sudah_kumpul
+            (SELECT COUNT(*) FROM log_materi lm WHERE lm.id_materi=km.id_materi AND lm.id_siswa='. (int)$id_siswa .' AND lm.finish_time IS NOT NULL AND (lm.nilai IS NULL OR (lm.nilai != "0" AND lm.nilai != 0))) as sudah_kumpul
         ');
         $this->db->from('kelas_materi km');
         $this->db->join('master_guru mg', 'mg.id_guru = km.id_guru', 'left');
@@ -644,6 +644,7 @@ class Notifikasi_model extends CI_Model {
     private function getIcon($type) {
         $map = [
             'tugas_baru'       => '📝',
+            'tugas_diulang'    => '🔄',
             'nilai_keluar'     => '⭐',
             'chat_masuk'       => '💬',
             'honor_pending'    => '💰',
@@ -659,6 +660,7 @@ class Notifikasi_model extends CI_Model {
     private function getColor($type) {
         $map = [
             'tugas_baru'       => 'primary',
+            'tugas_diulang'    => 'warning',
             'nilai_keluar'     => 'success',
             'chat_masuk'       => 'info',
             'honor_pending'    => 'warning',
