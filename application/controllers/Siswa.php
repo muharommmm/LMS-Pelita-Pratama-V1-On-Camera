@@ -143,15 +143,15 @@
         return;
     } public function seminggu() { goto dTfOZ; xN1kR: $jadwal = $this->kelas->loadJadwalSiswaHariIni($tp->id_tp, $smt->id_smt, $id_kelas, $numday); goto AYNRS; nuhXJ: $this->load->model("\113\145\154\141\x73\137\x6d\x6f\x64\x65\x6c", "\153\145\x6c\x61\x73"); goto zVSI9; wQBnF: Nh4zH: goto GSzvI; LA1OJ: $jadk = $this->kelas->getJadwalKbm($tp->id_tp, $smt->id_smt, $id_kelas); goto unMTM; dNoUp: $arrIdKjm = []; goto SwdZi; zVSI9: $id_siswa = $this->input->get("\151\x64\137\x73\x69\x73\x77\x61", true); goto s0sbH; OBM8x: $this->load->model("\x44\x72\157\160\x64\157\167\156\137\x6d\x6f\x64\145\x6c", "\x64\162\157\160\144\157\x77\x6e"); goto nuhXJ; hUQ1m: $materi["\153\x62\x6d"] = $jadk; goto AIgiZ; unMTM: $jadk->istirahat = unserialize($jadk->istirahat ?? ''); goto hUQ1m; N4Gm4: $tp = $this->dashboard->getTahunActive(); goto SRK3_; go3K4: $materi = []; goto Wsj95; I_Ace: if (!(count($arrIdKjm) > 0)) { goto Nh4zH; } goto iGkKq; srfM_: $today = date($tgl); goto VaNnq; SwdZi: foreach ($materi["\155\x61\x74\145\162\151"] as $mtr) { goto QM_HZ; ECB5N: array_push($arrIdKjm, $mtr->id_kjm); goto G6esC; QM_HZ: if (!isset($mtr->id_kjm)) { goto cLjB5; } goto ECB5N; bFqWm: SUbY1: goto kraf2; G6esC: cLjB5: goto bFqWm; kraf2: } goto MwAmG; iGkKq: $materi["\x6c\x6f\147\x73"] = (array) $this->kelas->getStatusMateriSiswaByJadwal($id_siswa, $arrIdKjm); goto wQBnF; XIAfZ: $mapels = $this->dropdown->getAllMapel(); goto N4Gm4; AIgiZ: $materi["\x73\x65\x6d\151\x6e\x67\x67\x75"] = $this->kelas->loadJadwalSiswaSeminggu($tp->id_tp, $smt->id_smt, $id_kelas); goto mdedt; AYNRS: $materi_hari_ini = $this->kelas->getMateriSiswa($id_kelas, $today, $jenis); goto go3K4; s0sbH: $id_kelas = $this->input->get("\151\144\137\x6b\145\154\141\x73", true); goto OjYC_; hE5d6: $jenis = $this->input->get("\152\x65\156\151\163", true); goto XIAfZ; SRK3_: $smt = $this->dashboard->getSemesterActive(); goto srfM_; VaNnq: $numday = date("\x4e", strtotime($tgl)); goto xN1kR; MwAmG: Xz7e_: goto I_Ace; OjYC_: $tgl = $this->input->get("\x74\147\154", true); goto hE5d6; GSzvI: $materi["\152\x61\144\x77\x61\x6c"] = $jadwal; goto LA1OJ; mdedt: $this->output_json($materi); goto y59Mz; Wsj95: foreach ($jadwal as $key => $value) { $materi["\x6d\141\x74\x65\x72\x69"][$key] = isset($materi_hari_ini[$key]) ? $materi_hari_ini[$key] : ["\x69\144\x5f\155\x61\x70\x65\x6c" => $value->id_mapel, "\151\144\x5f\x6a\141\144\x77\x61\x6c" => $value->id_jadwal, "\x6e\x61\155\x61\x5f\155\x61\x70\x65\x6c" => isset($mapels[$value->id_mapel]) ? $mapels[$value->id_mapel] : '']; y1Scc: } goto oKyLJ; dTfOZ: $this->load->model("\x44\x61\x73\x68\142\x6f\141\x72\x64\x5f\155\x6f\144\x65\x6c", "\x64\x61\x73\x68\142\x6f\x61\x72\144"); goto OBM8x; oKyLJ: vfqzL: goto dNoUp; y59Mz: } 
 
-    public function bukaMateri($id_kjm, $jamke) { 
+    public function bukaMateri($id_kjm, $jamke = '0') { 
         $this->bukaTugasMateri($id_kjm, $jamke, "1"); 
     } 
     
-    public function bukaTugas($id_kjm, $jamke) { 
+    public function bukaTugas($id_kjm, $jamke = '0') { 
         $this->bukaTugasMateri($id_kjm, $jamke, "2"); 
     } 
     
-    private function bukaTugasMateri($id_kjm, $jamke, $jenis) {
+    private function bukaTugasMateri($id_kjm, $jamke = '0', $jenis = "1") {
         $this->load->model("Dashboard_model", "dashboard");
         $this->load->model("Kelas_model", "kelas");
         $this->load->model("Cbt_model", "cbt");
