@@ -203,8 +203,10 @@ $foto_profil = $siswa->foto ? base_url($siswa->foto) : base_url('assets/img/sisw
                                     </div>
                                     <div class="text-right flex flex-col items-end gap-1">
                                         <span class="text-2xl font-bold <?= $is_redo_val ? 'text-amber-600' : 'text-indigo-600' ?> font-headline"><?= $nil->nilai ?></span>
-                                        <?php if ($is_redo_val) : ?>
-                                            <a href="<?= base_url('siswa/bukatugas/' . (isset($nil->id_materi) ? $nil->id_materi : '') . '/0') ?>" class="inline-flex items-center gap-1 text-[10px] font-bold text-amber-700 bg-amber-100 hover:bg-amber-200 px-2 py-1 rounded transition-colors">
+                                        <?php if ($is_redo_val) : 
+                                            $target_task_id = !empty($nil->id_kjm) ? $nil->id_kjm : (!empty($nil->id_materi) ? $nil->id_materi : (!empty($nil->id_materi_log) ? $nil->id_materi_log : ''));
+                                        ?>
+                                            <a href="<?= base_url('siswa/bukatugas/' . $target_task_id . '/0') ?>" class="inline-flex items-center gap-1 text-[10px] font-bold text-amber-700 bg-amber-100 hover:bg-amber-200 px-2 py-1 rounded transition-colors">
                                                 <span class="material-symbols-outlined text-xs">edit</span> Ulangi
                                             </a>
                                         <?php endif; ?>

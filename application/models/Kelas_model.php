@@ -420,7 +420,7 @@
     }
 
     public function getNilaiMateriSiswaFlex($id_siswa) {
-        $this->db->select("a.nilai, a.catatan, a.log_time as jadwal_materi, c.kode_materi, c.judul_materi, c.jenis, d.nama_mapel, d.kode");
+        $this->db->select("a.nilai, a.catatan, a.id_materi as id_materi_log, c.id_materi, (SELECT id_kjm FROM kelas_jadwal_materi kjm WHERE kjm.id_materi=c.id_materi LIMIT 1) as id_kjm, a.log_time as jadwal_materi, c.kode_materi, c.judul_materi, c.jenis, d.nama_mapel, d.kode");
         $this->db->from("log_materi a");
         $this->db->join("kelas_materi c", "a.id_materi=c.id_materi", "left");
         $this->db->join("master_mapel d", "c.id_mapel=d.id_mapel", "left");
