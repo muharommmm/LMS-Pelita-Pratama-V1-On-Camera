@@ -52,6 +52,9 @@ class Fonnte_lib {
      * @return string
      */
     public function format_phone($phone) {
+        if (strpos($phone, '@g.us') !== false) {
+            return trim($phone);
+        }
         $phone = preg_replace('/[^0-9]/', '', $phone); // Hapus karakter non-angka
         if (substr($phone, 0, 2) === '08') {
             $phone = '62' . substr($phone, 1);
@@ -63,9 +66,9 @@ class Fonnte_lib {
     }
 
     /**
-     * Kirim pesan WhatsApp ke satu nomor.
+     * Kirim pesan WhatsApp ke satu nomor atau grup.
      *
-     * @param string $phone Nomor HP penerima (format 08xx atau 628xx)
+     * @param string $phone Nomor HP penerima atau Group ID Fonnte (@g.us)
      * @param string $message Isi pesan
      * @return array ['success' => bool, 'response' => string, 'detail' => mixed]
      */
@@ -81,10 +84,10 @@ class Fonnte_lib {
 
         $phone = $this->format_phone($phone);
 
-        if (empty($phone) || strlen($phone) < 10) {
+        if (empty($phone) || (strpos($phone, '@g.us') === false && strlen($phone) < 10)) {
             return [
                 'success' => false,
-                'response' => 'Nomor HP tidak valid: ' . $phone,
+                'response' => 'Nomor HP/Grip ID tidak valid: ' . $phone,
                 'detail' => null
             ];
         }

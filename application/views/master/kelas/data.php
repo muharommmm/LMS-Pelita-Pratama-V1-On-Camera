@@ -78,6 +78,7 @@
                                 <?php endif; ?>
                                 <th class="align-middle">Wali Kelas</th>
                                 <th class="align-middle text-center">Jumlah Siswa</th>
+                                <th class="align-middle text-center">Grup WA</th>
                                 <th class="text-center align-middle p-0" style="width: 180px"><span>Aksi</span></th>
                             </tr>
                             </thead>
@@ -94,6 +95,15 @@
                                     <?php endif; ?>
                                     <td class="align-middle"><?= $kls->nama_guru ?></td>
                                     <td class="align-middle text-center"><?= $kls->jml_siswa ?></td>
+                                    <td class="align-middle text-center">
+                                        <?php if (!empty($kls->wa_group_id)) : ?>
+                                            <span class="badge badge-success" data-toggle="tooltip" title="<?= htmlspecialchars($kls->wa_group_id) ?>">
+                                                <i class="fab fa-whatsapp mr-1"></i>Terhubung
+                                            </span>
+                                        <?php else : ?>
+                                            <span class="badge badge-secondary">Belum Set</span>
+                                        <?php endif; ?>
+                                    </td>
                                     <td class="align-middle text-center">
                                         <div class="btn-group btn-group-xs">
                                 <span data-toggle="tooltip" title="Lihat Detail Kelas">

@@ -72,14 +72,24 @@
             <div class="card my-shadow">
                 <div class="card-header bg-primary text-white">
                     <div class="card-title">
-                        <h6><i class="fas fa-paper-plane mr-1"></i> Kirim Reminder Manual</h6>
+                        <h6><i class="fas fa-paper-plane mr-1"></i> Kirim Reminder & Broadcast Manual</h6>
                     </div>
                 </div>
                 <div class="card-body text-center py-4">
-                    <p class="mb-3">Kirim reminder jadwal mengajar hari ini ke semua tutor yang memiliki jadwal via WhatsApp.</p>
-                    <button class="btn btn-lg btn-success" id="btn-kirim-reminder" onclick="kirimReminderManual()">
-                        <i class="fab fa-whatsapp mr-2"></i> Kirim Reminder Sekarang
-                    </button>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <p class="mb-2">Kirim reminder jadwal mengajar hari ini ke semua tutor via WhatsApp.</p>
+                            <button class="btn btn-md btn-success" id="btn-kirim-reminder" onclick="kirimReminderManual()">
+                                <i class="fab fa-whatsapp mr-2"></i> Kirim Reminder Tutor
+                            </button>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <p class="mb-2">Kirim broadcast jadwal pelajaran harian ke semua Grup WA Kelas terdaftar.</p>
+                            <button class="btn btn-md btn-info" id="btn-kirim-broadcast-kelas" onclick="kirimBroadcastKelasManual()">
+                                <i class="fab fa-whatsapp mr-2"></i> Broadcast Jadwal Grup Kelas
+                            </button>
+                        </div>
+                    </div>
                     <div id="hasil-kirim" class="mt-3" style="display:none;"></div>
                 </div>
             </div>
@@ -223,5 +233,40 @@ function clearLogs() {
             location.reload();
         }
     }, 'json');
+}
+
+function kirimBroadcastKelasManual() {
+    if (!confirm('Kirim broadcast jadwal pelajaran harian ke semua Grup WA Kelas terhubung sekarang?')) return;
+    var btn = $('#btn-kirim-broadcast-kelas');
+    btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin mr-2"></i> Mengirim...');
+
+    $.get('<?= base_url("cron/send_jadwal_kelas_reminder?manual=1") ?>', function(res) {
+        btn.prop('disabled', false).html('<i class="fab fa-whatsapp mr-2"></i> Broadcast Jadwal Grup Kelas');
+
+        var html = '';
+        if (res.status) {
+            html += '<div class="alert alert-info"><i class="fas fa-check-circle mr-1"></i> ' + res.message + '</div>';
+            if (res.data && res.data.details && res.data.details.length > 0) {
+                html += '<div class="table-responsive"><table class="table table-sm table-bordered">';
+                html += '<thead><tr><th>Nama Kelas</th><th>Group ID</th><th>Status</th><th>Keterangan</th></tr></thead><tbody>';
+                res.data.details.forEach(function(d) {
+                    var badge = d.status === 'sent' ? 'badge-success' : (d.status === 'skipped' ? 'badge-warning' : 'badge-danger');
+                    html += '<tr>';
+                    html += '<td>' + (d.kelas || '-') + '</td>';
+                    html += '<td>' + (d.group || '-') + '</td>';
+                    html += '<td><span class="badge ' + badge + '">' + d.status + '</span></td>';
+                    html += '<td>' + (d.jadwal || (d.reason || '-')) + '</td>';
+                    html += '</tr>';
+                });
+                html += '</tbody></table></div>';
+            }
+        } else {
+            html += '<div class="alert alert-warning"><i class="fas fa-exclamation-triangle mr-1"></i> ' + res.message + '</div>';
+        }
+        $('#hasil-kirim').html(html).show();
+    }, 'json').fail(function(xhr) {
+        btn.prop('disabled', false).html('<i class="fab fa-whatsapp mr-2"></i> Broadcast Jadwal Grup Kelas');
+        $('#hasil-kirim').html('<div class="alert alert-danger">Terjadi kesalahan server.</div>').show();
+    });
 }
 </script>

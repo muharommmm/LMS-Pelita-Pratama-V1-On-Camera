@@ -84,6 +84,14 @@
                                            value="<?= $kelas->kode_kelas ?>" required/>
                                 </div>
                             </div>
+                            <div class="form-group row">
+                                <label class="col-md-3 control-label">ID Grup WA (Fonnte)</label>
+                                <div class="col-md-9">
+                                    <input type='text' name='wa_group_id' class='form-control'
+                                           value="<?= isset($kelas->wa_group_id) ? htmlspecialchars($kelas->wa_group_id) : '' ?>" placeholder="Contoh: 1203630123456789@g.us"/>
+                                    <small class="text-muted">Target ID Grup Fonnte untuk broadcast jadwal harian.</small>
+                                </div>
+                            </div>
                             <?php if ($setting->jenjang == '3') : ?>
                                 <div class="form-group row">
                                     <label for="jurusan_id" class="col-md-3 control-label">Jurusan</label>

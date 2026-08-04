@@ -304,4 +304,164 @@ class Cron extends CI_Controller {
             ->set_content_type('application/json')
             ->set_output(json_encode($response));
     }
+
+    /**
+     * Format Teks Pesan Jadwal Kelas WhatsApp.
+     */
+    private function build_message_kelas($nama_kelas, $schedules, $tanggal_str) {
+        $msg  = "*JADWAL PELAJARAN HARI INI*\n";
+        $msg .= "*Kelas:* {$nama_kelas}\n";
+        $msg .= "*Hari, Tanggal:* {$tanggal_str}\n\n";
+
+        foreach ($schedules as $s) {
+            $mapel = !empty($s->kode) ? $s->kode : (isset($s->nama_mapel) ? $s->nama_mapel : 'N/A');
+            $full_mapel = isset($s->nama_mapel) ? $s->nama_mapel : $mapel;
+            $start = isset($s->start_time) ? substr($s->start_time, 0, 5) : '??:??';
+            $end = isset($s->end_time) ? substr($s->end_time, 0, 5) : '??:??';
+            $tutor = isset($s->nama_guru) ? $s->nama_guru : 'Belum Ditentukan';
+            $jenis_kegiatan = isset($s->jenis_kegiatan) ? ucfirst($s->jenis_kegiatan) : 'Offline';
+
+            $msg .= "Pukul : *{$start} - {$end} WIB* | {$full_mapel} ({$mapel}) | {$jenis_kegiatan}\n";
+            $msg .= "*Tutor:* {$tutor}\n\n";
+        }
+
+        $msg .= "Akses di lms.ujianpelitapratama.com\n\n";
+        $msg .= "*Catatan:*\n";
+        $msg .= "Harap hadir tepat waktu dan menyiapkan buku/perangkat LMS.\n";
+        $msg .= "Selamat belajar!\n\n";
+        $msg .= "_Pesan ini dikirim otomatis dari LMS Pelita Pratama_";
+
+        return $msg;
+    }
+
+    /**
+     * Broadcast jadwal harian kelas ke Grup WhatsApp Fonnte (2 Jam Sebelum Pelajaran Pertama)
+     */
+    public function send_jadwal_kelas_reminder() {
+        set_time_limit(0);
+
+        if (!$this->is_authorized()) {
+            $this->output
+                ->set_content_type('application/json')
+                ->set_output(json_encode(['status' => false, 'message' => 'Akses ditolak.']));
+            return;
+        }
+
+        $is_manual = $this->input->get('manual', true) === '1' || $this->input->post('manual', true) === '1';
+
+        $tp = $this->dashboard->getTahunActive();
+        $smt = $this->dashboard->getSemesterActive();
+
+        if (!$tp || !$smt) {
+            $this->output
+                ->set_content_type('application/json')
+                ->set_output(json_encode(['status' => false, 'message' => 'Tahun pelajaran/semester tidak ditemukan.']));
+            return;
+        }
+
+        $day_today = (int)date('N');
+        $tgl_today = date('Y-m-d');
+        $tanggal_str = $this->tanggal_indo();
+        $now_time_sec = strtotime(date('H:i:00'));
+
+        $kelas_rows = $this->db->select('id_kelas, nama_kelas, wa_group_id')
+            ->from('master_kelas')
+            ->where('wa_group_id IS NOT NULL')
+            ->where('wa_group_id !=', '')
+            ->get()->result();
+
+        $sent_count = 0;
+        $failed_count = 0;
+        $skipped_count = 0;
+        $details = [];
+
+        foreach ($kelas_rows as $kls) {
+            if (!$is_manual) {
+                $already = $this->db->where('id_kelas', $kls->id_kelas)
+                    ->where('tgl_broadcast', $tgl_today)
+                    ->get('log_broadcast_jadwal')
+                    ->row();
+
+                if ($already) {
+                    $skipped_count++;
+                    $details[] = ['kelas' => $kls->nama_kelas, 'status' => 'skipped', 'reason' => 'Sudah dikirim hari ini'];
+                    continue;
+                }
+            }
+
+            $schedules = $this->jf_model->get_schedules_by_class($kls->id_kelas, $tp->id_tp, $smt->id_smt, $day_today);
+
+            if (empty($schedules)) {
+                $skipped_count++;
+                $details[] = ['kelas' => $kls->nama_kelas, 'status' => 'skipped', 'reason' => 'Tidak ada jadwal hari ini'];
+                continue;
+            }
+
+            $earliest_start = $schedules[0]->start_time;
+            $target_broadcast_sec = strtotime($tgl_today . ' ' . $earliest_start) - 7200;
+
+            if (!$is_manual && $now_time_sec < $target_broadcast_sec) {
+                $skipped_count++;
+                $details[] = [
+                    'kelas' => $kls->nama_kelas,
+                    'status' => 'skipped',
+                    'reason' => 'Belum waktunya broadcast (Waktu broadcast: ' . date('H:i', $target_broadcast_sec) . ' WIB)'
+                ];
+                continue;
+            }
+
+            $message = $this->build_message_kelas($kls->nama_kelas, $schedules, $tanggal_str);
+            $result = $this->fonnte_lib->send($kls->wa_group_id, $message);
+
+            if ($result['success']) {
+                $sent_count++;
+                $this->db->replace('log_broadcast_jadwal', [
+                    'id_kelas' => $kls->id_kelas,
+                    'tgl_broadcast' => $tgl_today,
+                    'created_at' => date('Y-m-d H:i:s')
+                ]);
+            } else {
+                $failed_count++;
+            }
+
+            $this->db->insert('wa_notification_log', [
+                'id_guru'  => NULL,
+                'no_hp'    => $kls->wa_group_id,
+                'message'  => $message,
+                'status'   => $result['success'] ? 'sent' : 'failed',
+                'response' => $result['response'],
+                'type'     => 'jadwal_kelas_group',
+                'sent_at'  => date('Y-m-d H:i:s')
+            ]);
+
+            $details[] = [
+                'kelas'  => $kls->nama_kelas,
+                'group'  => $kls->wa_group_id,
+                'status' => $result['success'] ? 'sent' : 'failed',
+                'jadwal' => count($schedules) . ' mapel'
+            ];
+
+            sleep(rand(3, 6));
+        }
+
+        $response = [
+            'status'  => true,
+            'message' => "Broadcast Jadwal Kelas selesai: {$sent_count} terkirim, {$failed_count} gagal, {$skipped_count} dilewati.",
+            'data'    => [
+                'sent'    => $sent_count,
+                'failed'  => $failed_count,
+                'skipped' => $skipped_count,
+                'details' => $details
+            ]
+        ];
+
+        if ($this->input->is_cli_request()) {
+            echo $response['message'] . "\n";
+            return;
+        }
+
+        $this->output
+            ->set_content_type('application/json')
+            ->set_output(json_encode($response));
+    }
 }

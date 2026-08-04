@@ -61,6 +61,25 @@ class Wa_settings extends CI_Controller {
         if (!$this->db->field_exists('wa_reminder_time', 'setting')) {
             $this->db->query("ALTER TABLE `setting` ADD COLUMN `wa_reminder_time` VARCHAR(5) DEFAULT '08:30'");
         }
+
+        // 5. Tambahkan kolom wa_group_id ke tabel master_kelas jika belum ada
+        if (!$this->db->field_exists('wa_group_id', 'master_kelas')) {
+            $this->db->query("ALTER TABLE `master_kelas` ADD COLUMN `wa_group_id` VARCHAR(100) DEFAULT NULL");
+        }
+
+        // 6. Buat tabel log_broadcast_jadwal jika belum ada
+        if (!$this->db->table_exists('log_broadcast_jadwal')) {
+            $this->db->query("
+                CREATE TABLE `log_broadcast_jadwal` (
+                    `id` INT(11) UNSIGNED NOT NULL AUTO_INCREMENT,
+                    `id_kelas` INT(11) NOT NULL,
+                    `tgl_broadcast` DATE NOT NULL,
+                    `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP,
+                    PRIMARY KEY (`id`),
+                    UNIQUE KEY `unique_kelas_tgl` (`id_kelas`, `tgl_broadcast`)
+                ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+            ");
+        }
     }
 
     /**
