@@ -371,15 +371,24 @@ $avatar_guru = !empty($tugas->foto) ? base_url($tugas->foto) : base_url('assets/
                     
                     <!-- Submission Form Card -->
                     <div class="lumina-card p-5 space-y-4">
+                        <?php 
+                        $is_redo = isset($is_redo) ? $is_redo : (is_object($log_obj_raw) && isset($log_obj_raw->nilai) && $log_obj_raw->nilai !== null && ((string)$log_obj_raw->nilai === '0' || (float)$log_obj_raw->nilai === 0.0));
+                        ?>
                         <div class="flex justify-between items-center">
                             <h4 class="font-headline font-bold text-xs text-primary uppercase tracking-wider">Hasil Pekerjaan</h4>
-                            <span class="px-2 py-0.5 rounded-full text-[9px] font-bold <?= $log_selesai != null ? 'bg-green-50 text-green-700 border border-green-200' : 'bg-red-50 text-red-700 border border-red-200' ?>">
-                                <?= $log_selesai != null ? 'Sudah Dikirim' : 'Belum Dikirim' ?>
-                            </span>
+                            <?php if ($is_redo) : ?>
+                                <span class="px-2 py-0.5 rounded-full text-[9px] font-bold bg-amber-50 text-amber-700 border border-amber-200">
+                                    Perlu Diulang (Nilai: 0)
+                                </span>
+                            <?php else : ?>
+                                <span class="px-2 py-0.5 rounded-full text-[9px] font-bold <?= $log_selesai != null ? 'bg-green-50 text-green-700 border border-green-200' : 'bg-red-50 text-red-700 border border-red-200' ?>">
+                                    <?= $log_selesai != null ? 'Sudah Dikirim' : 'Belum Dikirim' ?>
+                                </span>
+                            <?php endif; ?>
                         </div>
 
                         <!-- Hasil / Form Jawaban -->
-                        <?php if ($sudah_selesai) : ?>
+                        <?php if ($sudah_selesai && !$is_redo) : ?>
                             <div class="space-y-3">
                                 <div>
                                     <label class="text-[10px] font-bold text-on-surface-variant uppercase tracking-wider">Jawaban / Catatan Siswa</label>
@@ -417,6 +426,15 @@ $avatar_guru = !empty($tugas->foto) ? base_url($tugas->foto) : base_url('assets/
                                 <?php endif; ?>
                             </div>
                         <?php else : ?>
+                            <?php if ($is_redo) : ?>
+                                <div class="p-3.5 bg-amber-50 border border-amber-200 rounded-xl text-xs text-amber-900 space-y-1">
+                                    <div class="font-bold flex items-center gap-1.5 text-amber-700">
+                                        <span class="material-symbols-outlined text-sm">warning</span> Catatan Tutor (Tugas Perlu Diulang):
+                                    </div>
+                                    <p class="leading-relaxed"><?= (is_object($log_obj_raw) && !empty($log_obj_raw->catatan)) ? htmlspecialchars($log_obj_raw->catatan) : 'Tugas mendapat nilai 0. Silakan perbaiki dan kirimkan kembali tugas Anda.' ?></p>
+                                </div>
+                            <?php endif; ?>
+
                             <!-- Form Text/Html Editor -->
                             <?= form_open('', array('id' => 'formhasil')) ?>
                                 <div class="space-y-3">
@@ -425,11 +443,11 @@ $avatar_guru = !empty($tugas->foto) ? base_url($tugas->foto) : base_url('assets/
                                         <textarea id="text-tugas" name='isi_tugas' class='editor'
                                                   data-id="<?= $this->security->get_csrf_hash() ?>"
                                                   data-name="<?= $this->security->get_csrf_token_name() ?>">
-                                            <?= is_object($log_selesai) && isset($log_selesai->text) ? $log_selesai->text : '' ?>
+                                            <?= is_object($log_selesai) && isset($log_selesai->text) ? $log_selesai->text : (is_object($log_obj_raw) && isset($log_obj_raw->text) ? $log_obj_raw->text : '') ?>
                                         </textarea>
                                     </div>
                                     <button type="submit" class="w-full flex items-center justify-center gap-2 py-2.5 bg-primary text-white text-xs font-semibold rounded-lg hover:bg-primary/95 transition-all shadow-sm">
-                                        <span class="material-symbols-outlined text-sm">send</span> Kirim Pekerjaan
+                                        <span class="material-symbols-outlined text-sm">send</span> Kirim Ulang Pekerjaan
                                     </button>
                                 </div>
                             <?= form_close(); ?>

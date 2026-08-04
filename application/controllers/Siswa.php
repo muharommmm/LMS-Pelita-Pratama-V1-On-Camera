@@ -361,7 +361,8 @@
             "jam_ke"      => $jamke,
             "log_desc"    => "Menyelesaikan tugas",
             "text"        => $isi_tugas,
-            "file"        => serialize($src_file)
+            "file"        => serialize($src_file),
+            "nilai"       => NULL
         ];
 
         // --- START DB TRANSACTION ---

@@ -346,8 +346,13 @@ $foto_profil = $siswa->foto ? base_url($siswa->foto) : base_url('assets/img/sisw
                                                         $status_class = '';
                                                         $status_label = '';
                                                         
-                                                        if (count($log) > 0) {
-                                                            if (isset($log[$mtr->id_kjm]) && $log[$mtr->id_kjm]->finish_time != null) {
+                                                        if (count($log) > 0 && isset($log[$mtr->id_kjm])) {
+                                                            $item_log = $log[$mtr->id_kjm];
+                                                            $is_redo_item = (isset($item_log->nilai) && $item_log->nilai !== null && ((string)$item_log->nilai === '0' || (float)$item_log->nilai === 0.0));
+                                                            if ($is_redo_item) {
+                                                                $status_class = 'bg-amber-50 text-amber-700 border-amber-200';
+                                                                $status_label = 'Perlu Diulang';
+                                                            } elseif ($item_log->finish_time != null) {
                                                                 $status_class = 'bg-green-50 text-green-700 border-green-200';
                                                                 $status_label = 'Selesai';
                                                             } else {

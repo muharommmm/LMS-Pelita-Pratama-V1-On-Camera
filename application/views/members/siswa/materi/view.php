@@ -15,8 +15,14 @@ if ($judul === 'Tugas') {
     $log_obj = $this->load->get_var('logs');
     // log_mulai = the log object itself (opened = has log_time)
     $data_tugas['log_mulai']  = $log_obj;
-    // log_selesai = the log object only if the student has submitted (has isi_tugas or file)
-    $data_tugas['log_selesai'] = ($log_obj != null && (!empty($log_obj->text) || !empty($log_obj->file))) ? $log_obj : null;
+    $data_tugas['log_obj_raw'] = $log_obj;
+    
+    // Check if task is graded as 0 (re-do required)
+    $is_redo = ($log_obj != null && isset($log_obj->nilai) && $log_obj->nilai !== null && ((string)$log_obj->nilai === '0' || (float)$log_obj->nilai === 0.0));
+    $data_tugas['is_redo'] = $is_redo;
+    
+    // log_selesai = the log object only if the student has submitted AND it is NOT marked for re-do (nilai == 0)
+    $data_tugas['log_selesai'] = ($log_obj != null && (!empty($log_obj->text) || !empty($log_obj->file)) && !$is_redo) ? $log_obj : null;
     
     $this->load->view('members/siswa/tugas/view_hermony', $data_tugas);
 } else {
