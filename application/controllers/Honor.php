@@ -50,6 +50,9 @@ class Honor extends CI_Controller {
             $data['start_date'] = $start_date;
             $data['end_date'] = $end_date;
 
+            // Remediation: Update past auto student attendance records and sync tutors honor
+            $this->remediate_auto_attendance($tp->id_tp, $smt->id_smt);
+
             $data['summaries'] = $this->honor->get_all_tutors_summary($start_date, $end_date);
             $data['rates'] = $this->honor->get_rates();
             $data['tutors'] = $this->dropdown->getAllGuru(); // Dropdown select for custom rates and payout
@@ -668,6 +671,29 @@ class Honor extends CI_Controller {
         } catch (Exception $e) {
             log_message('error', '[DEBUG_BULK] Exception: ' . $e->getMessage());
             $this->output->set_output(json_encode(['status' => false, 'message' => 'Server error: ' . $e->getMessage()]));
+        }
+    }
+
+    /**
+     * Remediation helper to fix legacy auto student attendance records and clean phantom tutor honor records
+     */
+    public function remediate_auto_attendance($tp_id = null, $smt_id = null) {
+        if (!$tp_id || !$smt_id) {
+            $tp = $this->dashboard->getTahunActive();
+            $smt = $this->dashboard->getSemesterActive();
+            $tp_id = $tp->id_tp;
+            $smt_id = $smt->id_smt;
+        }
+
+        // 1. Update past auto student attendance records to auto_student method
+        $this->db->where('method', 'manual_tutor');
+        $this->db->like('notes', '[Auto] Hadir');
+        $this->db->update('absensi_siswa', ['method' => 'auto_student']);
+
+        // 2. Re-sync all tutors honor so phantom honor records created from auto attendance are rejected/cleaned
+        $all_tutors = $this->db->get('master_guru')->result();
+        foreach ($all_tutors as $tutor) {
+            $this->honor->sync_honor($tutor->id_guru, $tp_id, $smt_id);
         }
     }
 }

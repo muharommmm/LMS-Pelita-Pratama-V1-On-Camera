@@ -260,7 +260,7 @@
             'date'           => date('Y-m-d'),
             'time'           => date('H:i:s'),
             'status'         => 'H',
-            'method'         => 'manual_tutor',
+            'method'         => 'auto_student',
             'tutor_id_input' => $tutor_id,
             'notes'          => '[Auto] Hadir via Materi/Tugas Online',
             'jenis_kegiatan' => 'online'

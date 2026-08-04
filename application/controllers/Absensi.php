@@ -575,14 +575,20 @@ class Absensi extends CI_Controller {
         $smt = $this->dashboard->getSemesterActive();
         $tutor = $this->db->where(['id_user' => $this->ion_auth->user()->row()->id])->get('master_guru')->row();
 
-        // Build query
+        // Auto-remediate legacy auto student attendance records in absensi_siswa
+        $this->db->where('method', 'manual_tutor');
+        $this->db->like('notes', '[Auto] Hadir');
+        $this->db->update('absensi_siswa', ['method' => 'auto_student']);
+
+        // Build query for manual tutor attendance history only
         $this->db->select('a.mapel_id, a.date, a.time, a.jenis_kegiatan, COUNT(a.id_absensi) as student_count, GROUP_CONCAT(DISTINCT a.class_id) as class_ids, m.nama_mapel')
                  ->from('absensi_siswa a')
                  ->join('master_mapel m', 'a.mapel_id = m.id_mapel', 'left')
                  ->where('a.tutor_id_input', $tutor->id_guru)
                  ->where('a.tp_id', $tp->id_tp)
                  ->where('a.smt_id', $smt->id_smt)
-                 ->where('a.method', 'manual_tutor');
+                 ->where('a.method', 'manual_tutor')
+                 ->not_like('a.notes', '[Auto] Hadir');
 
         // Apply filters
         if (!empty($class_id)) {
