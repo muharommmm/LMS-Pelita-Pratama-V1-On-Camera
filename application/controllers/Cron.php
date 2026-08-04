@@ -120,31 +120,30 @@ class Cron extends CI_Controller {
      * @return string
      */
     private function build_message($nama_guru, $schedules, $tanggal_str) {
-        $msg  = "🔔 *Jadwal Mengajar - {$tanggal_str}*\n";
-        $msg .= "Halo Bpk/Ibu {$nama_guru}!\n\n";
+        $msg  = "Reminder!\n";
+        $msg .= "Halo Bpk/Ibu {$nama_guru}!\n";
+        $msg .= "*Jadwal Mengajar Hari Ini- {$tanggal_str}*\n";
 
-        $i = 1;
         foreach ($schedules as $s) {
-            // Gunakan Kode Mapel jika ada, jika tidak pakai Nama Mapel
-            $mapel = (!empty($s->kode)) ? $s->kode : (isset($s->nama_mapel) ? $s->nama_mapel : 'N/A');
-            
-            // Persingkat nama kelas
             $kelas = isset($s->nama_kelas) ? $s->nama_kelas : 'N/A';
-            $kelas = str_replace(
-                ['NON REGULER', 'REGULER', 'non reguler', 'reguler'], 
-                ['N-REG', 'REG', 'N-REG', 'REG'], 
-                $kelas
-            );
             
             $start = isset($s->start_time) ? substr($s->start_time, 0, 5) : '??:??';
-            $jenis = isset($s->jenis_kegiatan) ? $s->jenis_kegiatan : 'offline';
-            $metode = $this->format_metode($jenis);
+            $end   = isset($s->end_time) ? substr($s->end_time, 0, 5) : '??:??';
+            $jam_str = "{$start} - {$end}";
 
-            $msg .= "{$i}. {$mapel} ({$kelas}) - {$start} [{$metode}]\n";
-            $i++;
+            $mapel_name = !empty($s->nama_mapel) ? $s->nama_mapel : 'N/A';
+            $mapel_code = !empty($s->kode) ? " ({$s->kode})" : "";
+            $mapel_full = $mapel_name . $mapel_code;
+
+            $jenis_raw = isset($s->jenis_kegiatan) ? trim($s->jenis_kegiatan) : 'Offline';
+            $jenis = ucfirst(strtolower($jenis_raw));
+
+            $msg .= "{$kelas}\n";
+            $msg .= "Pukul : {$jam_str} WIB | {$mapel_full} | {$jenis}\n\n";
         }
 
-        $msg .= "\nLMS Pelita Pratama 🎓";
+        $msg .= "Akses di lms.ujianpelitapratama.com\n\n";
+        $msg .= "_Pesan ini dikirim otomatis dari LMS Pelita Pratama_";
 
         return $msg;
     }
