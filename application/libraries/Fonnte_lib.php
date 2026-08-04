@@ -52,7 +52,7 @@ class Fonnte_lib {
      * @return string
      */
     public function format_phone($phone) {
-        if (strpos($phone, '@g.us') !== false) {
+        if (strpos($phone, '@g.us') !== false || strpos($phone, ',') !== false) {
             return trim($phone);
         }
         $phone = preg_replace('/[^0-9]/', '', $phone); // Hapus karakter non-angka
