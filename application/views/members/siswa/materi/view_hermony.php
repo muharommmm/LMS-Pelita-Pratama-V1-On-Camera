@@ -387,11 +387,11 @@ $avatar_guru = ($materi && isset($materi->foto)) ? base_url($materi->foto) : bas
                                     <div class="border border-outline-variant rounded-lg p-2 flex flex-col justify-between items-center text-center bg-slate-50/50 hover:bg-slate-50 transition-all min-h-[100px]">
                                         <div class="flex-1 flex items-center justify-center p-2">
                                             <?php if ($is_image) : ?>
-                                                <img class="max-h-12 rounded object-cover cursor-pointer" src="<?= base_url() . $file["src"] ?>" onclick="window.open(this.src, '_blank')" title="Buka gambar"/>
+                                                <img class="max-h-12 rounded object-cover cursor-pointer" src="<?= base_url() . $file["src"] ?>" onclick="openFilePreview(this.src, 'image', '<?= htmlspecialchars($file['name'], ENT_QUOTES) ?>')" title="Buka gambar"/>
                                             <?php elseif ($is_video) : ?>
-                                                <span class="material-symbols-outlined text-3xl text-primary cursor-pointer hover:scale-105 transition-all" onclick="window.open('<?= base_url() . $file["src"] ?>', '_blank')">play_circle</span>
+                                                <span class="material-symbols-outlined text-3xl text-primary cursor-pointer hover:scale-105 transition-all" onclick="openFilePreview('<?= base_url() . $file["src"] ?>', 'video', '<?= htmlspecialchars($file['name'], ENT_QUOTES) ?>')">play_circle</span>
                                             <?php else : ?>
-                                                <span class="material-symbols-outlined text-3xl text-slate-400 cursor-pointer" onclick="window.open('<?= base_url() . $file["src"] ?>', '_blank')">description</span>
+                                                <span class="material-symbols-outlined text-3xl text-slate-400 cursor-pointer" onclick="openFilePreview('<?= base_url() . $file["src"] ?>', 'document', '<?= htmlspecialchars($file['name'], ENT_QUOTES) ?>')">description</span>
                                             <?php endif; ?>
                                         </div>
                                         <p class="text-[9px] text-on-surface font-semibold truncate w-full px-1" title="<?= $file["name"] ?>"><?= $file["name"] ?></p>
@@ -442,7 +442,7 @@ $avatar_guru = ($materi && isset($materi->foto)) ? base_url($materi->foto) : bas
                                                     <div class="flex-1 flex items-center justify-center p-2">
                                                         <?php if ($is_heic) : ?>
                                                             <?php $unique_id = 'heic_' . uniqid(); ?>
-                                                            <img id="<?= $unique_id ?>" class="max-h-16 rounded object-cover cursor-pointer hover:opacity-90 transition-opacity heic-loading" src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-heic-src="<?= $src ?>" onclick="window.open(this.src, '_blank')" title="Buka gambar"/>
+                                                            <img id="<?= $unique_id ?>" class="max-h-16 rounded object-cover cursor-pointer hover:opacity-90 transition-opacity heic-loading" src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-heic-src="<?= $src ?>" onclick="openFilePreview(this.src.startsWith('data:') ? this.getAttribute('data-heic-src') : this.src, 'image', '<?= htmlspecialchars($name, ENT_QUOTES) ?>')" title="Buka gambar"/>
                                                             <script>
                                                                 setTimeout(function() {
                                                                     var imgEl = document.getElementById('<?= $unique_id ?>');
@@ -452,11 +452,11 @@ $avatar_guru = ($materi && isset($materi->foto)) ? base_url($materi->foto) : bas
                                                                 }, 100);
                                                             </script>
                                                         <?php elseif ($is_image) : ?>
-                                                            <img class="max-h-16 rounded object-cover cursor-pointer hover:opacity-90 transition-opacity" src="<?= $src ?>" onclick="window.open(this.src, '_blank')" title="Buka gambar"/>
+                                                            <img class="max-h-16 rounded object-cover cursor-pointer hover:opacity-90 transition-opacity" src="<?= $src ?>" onclick="openFilePreview(this.src, 'image', '<?= htmlspecialchars($name, ENT_QUOTES) ?>')" title="Buka gambar"/>
                                                         <?php elseif ($is_video) : ?>
-                                                            <span class="material-symbols-outlined text-3xl text-primary cursor-pointer hover:scale-105 transition-all" onclick="window.open('<?= $src ?>', '_blank')">play_circle</span>
+                                                            <span class="material-symbols-outlined text-3xl text-primary cursor-pointer hover:scale-105 transition-all" onclick="openFilePreview('<?= $src ?>', 'video', '<?= htmlspecialchars($name, ENT_QUOTES) ?>')">play_circle</span>
                                                         <?php else : ?>
-                                                            <span class="material-symbols-outlined text-3xl text-slate-400 cursor-pointer" onclick="window.open('<?= $src ?>', '_blank')">description</span>
+                                                            <span class="material-symbols-outlined text-3xl text-slate-400 cursor-pointer" onclick="openFilePreview('<?= $src ?>', 'document', '<?= htmlspecialchars($name, ENT_QUOTES) ?>')">description</span>
                                                         <?php endif; ?>
                                                     </div>
                                                     <p class="text-[9px] text-on-surface font-semibold truncate w-full px-1" title="<?= htmlspecialchars($name) ?>"><?= htmlspecialchars($name) ?></p>
@@ -983,7 +983,65 @@ $avatar_guru = ($materi && isset($materi->foto)) ? base_url($materi->foto) : bas
             console.error("Error in createPreviewFile:", err);
         }
     }
+
+    function openFilePreview(url, type, name) {
+        let container = document.getElementById('preview-container');
+        let title = document.getElementById('preview-file-name');
+        let modal = document.getElementById('pwa-file-preview-modal');
+        
+        title.textContent = name || "Pratinjau Berkas";
+        container.innerHTML = "";
+        
+        let extension = url.split('.').pop().split('?')[0].toLowerCase();
+        
+        if (['jpg', 'jpeg', 'png', 'gif', 'webp', 'heic', 'heif'].includes(extension) || type.includes('image') || url.startsWith('blob:')) {
+            let img = document.createElement('img');
+            img.className = "max-w-full max-h-full object-contain rounded-lg";
+            img.src = url;
+            container.appendChild(img);
+        } else if (['mp4', 'mpeg', 'avi', 'webm', 'mpg'].includes(extension) || type.includes('video')) {
+            let video = document.createElement('video');
+            video.className = "w-full max-h-full rounded-lg";
+            video.controls = true;
+            video.src = url;
+            container.appendChild(video);
+        } else if (extension === 'pdf') {
+            let iframe = document.createElement('iframe');
+            iframe.className = "w-full h-full border-0 rounded-b-lg";
+            iframe.src = url;
+            container.appendChild(iframe);
+        } else {
+            container.innerHTML = `
+                <div class="text-center text-white p-6 space-y-4">
+                    <span class="material-symbols-outlined text-6xl text-slate-400">description</span>
+                    <p class="text-sm">Berkas ini tidak mendukung pratinjau langsung.</p>
+                    <a href="${url}" download class="inline-block bg-[#334779] text-white text-xs font-bold px-4 py-2 rounded-lg hover:bg-[#334779]/80 transition-all">Unduh Berkas</a>
+                </div>
+            `;
+        }
+        
+        modal.classList.remove('hidden');
+    }
+
+    function closeFilePreviewModal() {
+        let modal = document.getElementById('pwa-file-preview-modal');
+        let container = document.getElementById('preview-container');
+        container.innerHTML = "";
+        modal.classList.add('hidden');
+    }
 </script>
+
+<!-- Modal Pratinjau File PWA -->
+<div id="pwa-file-preview-modal" class="fixed inset-0 z-[9999] hidden bg-black/80 flex flex-col justify-center items-center p-4">
+    <div class="w-full max-w-4xl bg-white rounded-t-xl p-3 flex justify-between items-center shadow-md">
+        <span id="preview-file-name" class="font-headline font-bold text-xs text-primary truncate max-w-[70%]">Nama Berkas</span>
+        <button onclick="closeFilePreviewModal()" class="flex items-center gap-1 bg-red-600 hover:bg-red-700 text-white text-xs font-bold px-3 py-1.5 rounded-lg transition-all">
+            <span class="material-symbols-outlined text-sm">close</span> Tutup Pratinjau
+        </button>
+    </div>
+    <div id="preview-container" class="w-full max-w-4xl h-[70vh] bg-slate-900 rounded-b-xl flex justify-center items-center overflow-hidden p-2 relative">
+    </div>
+</div>
 
 <style>
     @supports (padding-bottom: env(safe-area-inset-bottom)) {
