@@ -35,7 +35,7 @@ $avatar_guru = ($materi && isset($materi->foto)) ? base_url($materi->foto) : bas
 <head>
     <meta charset="utf-8"/>
     <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
-    <title><?= $judul ?> - Lumina Learning System</title>
+    <title><?= $judul ?> - Pelita LMS</title>
     
     <!-- Summernote/Bootstrap Dependencies -->
     <link rel="stylesheet" href="<?= base_url() ?>/assets/plugins/fontawesome-free/css/all.min.css">
@@ -387,11 +387,11 @@ $avatar_guru = ($materi && isset($materi->foto)) ? base_url($materi->foto) : bas
                                     <div class="border border-outline-variant rounded-lg p-2 flex flex-col justify-between items-center text-center bg-slate-50/50 hover:bg-slate-50 transition-all min-h-[100px]">
                                         <div class="flex-1 flex items-center justify-center p-2">
                                             <?php if ($is_image) : ?>
-                                                <img class="max-h-12 rounded object-cover cursor-pointer" src="<?= base_url() . $file["src"] ?>" onclick="window.open(this.src)" title="Buka gambar"/>
+                                                <img class="max-h-12 rounded object-cover cursor-pointer" src="<?= base_url() . $file["src"] ?>" onclick="window.open(this.src, '_blank')" title="Buka gambar"/>
                                             <?php elseif ($is_video) : ?>
-                                                <span class="material-symbols-outlined text-3xl text-primary cursor-pointer hover:scale-105 transition-all" onclick="window.open('<?= base_url() . $file["src"] ?>')">play_circle</span>
+                                                <span class="material-symbols-outlined text-3xl text-primary cursor-pointer hover:scale-105 transition-all" onclick="window.open('<?= base_url() . $file["src"] ?>', '_blank')">play_circle</span>
                                             <?php else : ?>
-                                                <span class="material-symbols-outlined text-3xl text-slate-400 cursor-pointer" onclick="window.open('<?= base_url() . $file["src"] ?>')">description</span>
+                                                <span class="material-symbols-outlined text-3xl text-slate-400 cursor-pointer" onclick="window.open('<?= base_url() . $file["src"] ?>', '_blank')">description</span>
                                             <?php endif; ?>
                                         </div>
                                         <p class="text-[9px] text-on-surface font-semibold truncate w-full px-1" title="<?= $file["name"] ?>"><?= $file["name"] ?></p>
@@ -442,7 +442,7 @@ $avatar_guru = ($materi && isset($materi->foto)) ? base_url($materi->foto) : bas
                                                     <div class="flex-1 flex items-center justify-center p-2">
                                                         <?php if ($is_heic) : ?>
                                                             <?php $unique_id = 'heic_' . uniqid(); ?>
-                                                            <img id="<?= $unique_id ?>" class="max-h-16 rounded object-cover cursor-pointer hover:opacity-90 transition-opacity heic-loading" src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-heic-src="<?= $src ?>" onclick="window.open(this.src)" title="Buka gambar"/>
+                                                            <img id="<?= $unique_id ?>" class="max-h-16 rounded object-cover cursor-pointer hover:opacity-90 transition-opacity heic-loading" src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-heic-src="<?= $src ?>" onclick="window.open(this.src, '_blank')" title="Buka gambar"/>
                                                             <script>
                                                                 setTimeout(function() {
                                                                     var imgEl = document.getElementById('<?= $unique_id ?>');
@@ -452,11 +452,11 @@ $avatar_guru = ($materi && isset($materi->foto)) ? base_url($materi->foto) : bas
                                                                 }, 100);
                                                             </script>
                                                         <?php elseif ($is_image) : ?>
-                                                            <img class="max-h-16 rounded object-cover cursor-pointer hover:opacity-90 transition-opacity" src="<?= $src ?>" onclick="window.open(this.src)" title="Buka gambar"/>
+                                                            <img class="max-h-16 rounded object-cover cursor-pointer hover:opacity-90 transition-opacity" src="<?= $src ?>" onclick="window.open(this.src, '_blank')" title="Buka gambar"/>
                                                         <?php elseif ($is_video) : ?>
-                                                            <span class="material-symbols-outlined text-3xl text-primary cursor-pointer hover:scale-105 transition-all" onclick="window.open('<?= $src ?>')">play_circle</span>
+                                                            <span class="material-symbols-outlined text-3xl text-primary cursor-pointer hover:scale-105 transition-all" onclick="window.open('<?= $src ?>', '_blank')">play_circle</span>
                                                         <?php else : ?>
-                                                            <span class="material-symbols-outlined text-3xl text-slate-400 cursor-pointer" onclick="window.open('<?= $src ?>')">description</span>
+                                                            <span class="material-symbols-outlined text-3xl text-slate-400 cursor-pointer" onclick="window.open('<?= $src ?>', '_blank')">description</span>
                                                         <?php endif; ?>
                                                     </div>
                                                     <p class="text-[9px] text-on-surface font-semibold truncate w-full px-1" title="<?= htmlspecialchars($name) ?>"><?= htmlspecialchars($name) ?></p>
