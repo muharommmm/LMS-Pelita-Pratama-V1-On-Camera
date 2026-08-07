@@ -10,35 +10,25 @@
     }
 
     public function manifest() {
-        $this->load->model('Settings_model', 'settings');
-        $setting = $this->settings->getSetting();
-        
-        $logo = ($setting && !empty($setting->logo_kiri)) ? $setting->logo_kiri : 'assets/img/login.png';
-        $logo_url = base_url($logo);
-        
-        $manifest = [
-            "name" => "LMS Pelita Pratama",
-            "short_name" => "Pelita LMS",
-            "start_url" => base_url(),
-            "display" => "standalone",
-            "background_color" => "#334779",
-            "theme_color" => "#334779",
-            "icons" => [
-                [
-                    "src" => $logo_url,
-                    "sizes" => "192x192",
-                    "type" => "image/png"
-                ],
-                [
-                    "src" => $logo_url,
-                    "sizes" => "512x512",
-                    "type" => "image/png"
-                ]
-            ]
+        // 1. Ambil data log_materi yang berkaitan dengan materi 19
+        $logs = $this->db->select('a.*, s.nama as nama_siswa')
+                         ->from('log_materi a')
+                         ->join('master_siswa s', 's.id_siswa = a.id_siswa', 'left')
+                         ->where('a.id_materi', 19)
+                         ->or_where('a.id_siswa', 30)
+                         ->get()->result();
+
+        // 2. Ambil data siswa dengan ID 30 untuk memastikan nama Siswa A
+        $siswa_a = $this->db->where('id_siswa', 30)->get('master_siswa')->row();
+
+        $res = [
+            "info" => "Diagnosis Tugas Materi 19 & Siswa ID 30",
+            "siswa_id_30" => $siswa_a ? $siswa_a->nama : "Tidak ditemukan",
+            "log_records" => $logs
         ];
-        
+
         $this->output
              ->set_content_type('application/json')
-             ->set_output(json_encode($manifest, JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT));
+             ->set_output(json_encode($res, JSON_PRETTY_PRINT));
     }
 }
