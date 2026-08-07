@@ -414,7 +414,7 @@
             var catatanGuru = val.catatan === '' ? '' : val.catatan;
 
             var idMateri = $('#dropdown-materi').val();
-            $('#id-log').val(val.id_log || (val.id_siswa + '' + idMateri));
+            $('#id-log').val(val.id_log || (val.id_siswa + '_' + idMateri));
             $('#id-siswa').val(val.id_siswa);
             $('#id-materi').val(idMateri);
             //console.log('id', key + '' + idMateri);

@@ -215,7 +215,7 @@
         $jamke = $this->input->get("jamke", true);
         $mapel = $this->input->get("mapel", true);
         
-        $res = $this->kelas->saveLog("log_materi", $id_siswa, $id_kjm, $jamke, $mapel, "Membuka materi");
+        $res = $this->_saveLogFixed("log_materi", $id_siswa, $id_kjm, $jamke, $mapel, "Membuka materi");
         $this->output_json($res);
     }
 
@@ -226,8 +226,45 @@
         $jamke = $this->input->get("jamke", true);
         $mapel = $this->input->get("mapel", true);
         
-        $res = $this->kelas->saveLog("log_materi", $id_siswa, $id_kjm, $jamke, $mapel, "Membuka tugas");
+        $res = $this->_saveLogFixed("log_materi", $id_siswa, $id_kjm, $jamke, $mapel, "Membuka tugas");
         $this->output_json($res);
+    }
+
+    /**
+     * Fixed version of Kelas_model::saveLog that uses underscore separator 
+     * in id_log to prevent cross-student collision.
+     */
+    private function _saveLogFixed($table, $id_siswa, $id_kjm, $jamke, $mapel, $desc) {
+        $this->load->library("user_agent");
+        
+        if ($this->agent->is_browser()) {
+            $agent = $this->agent->browser() . " " . $this->agent->version();
+        } elseif ($this->agent->is_mobile()) {
+            $agent = $this->agent->mobile();
+        } else {
+            $agent = "unknown";
+        }
+        
+        $os = $this->agent->platform();
+        $ip = $this->input->ip_address();
+        
+        $id_log = $id_siswa . '_' . $id_kjm; // FIXED: underscore separator
+        
+        $data = [
+            "id_log"    => $id_log,
+            "log_time"  => date("Y-m-d H:i:s"),
+            "id_siswa"  => $id_siswa,
+            "id_materi" => $id_kjm,
+            "id_mapel"  => $mapel,
+            "jam_ke"    => $jamke,
+            "log_desc"  => $desc,
+            "address"   => $ip,
+            "agent"     => $agent,
+            "device"    => $os
+        ];
+        
+        // Use replace to handle both insert and update (upsert on id_log)
+        return $this->db->replace($table, $data);
     }
 
     private function syncOfficialAttendance($id_siswa, $id_kjm) {
@@ -300,7 +337,7 @@
             }
         }
 
-        $id_log = $id_siswa . $id_kjm;
+        $id_log = $id_siswa . '_' . $id_kjm;
         $insert = [
             "id_siswa"    => $id_siswa,
             "id_materi"   => $id_kjm,
@@ -353,7 +390,7 @@
             }
         }
 
-        $id_log = $id_siswa . $id_kjm;
+        $id_log = $id_siswa . '_' . $id_kjm;
         $insert = [
             "id_siswa"    => $id_siswa,
             "id_materi"   => $id_kjm,
