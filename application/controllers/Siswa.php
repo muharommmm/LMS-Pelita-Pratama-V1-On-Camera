@@ -179,23 +179,11 @@
         
         $data["materi"] = $this->kelas->getMateriKelasSiswa($id_kjm, $jenis);
         
-        // Fetch all student logs for this material
-        $logs = $this->kelas->getStatusMateriSiswa($id_kjm);
-        
-        // Match specific student's log from the returned indexed array
-        $siswa_log = null;
-        if (is_array($logs)) {
-            if (isset($logs[$siswa->id_siswa])) {
-                $siswa_log = $logs[$siswa->id_siswa];
-            } else {
-                foreach ($logs as $l) {
-                    if (isset($l->id_siswa) && $l->id_siswa == $siswa->id_siswa) {
-                        $siswa_log = $l;
-                        break;
-                    }
-                }
-            }
-        }
+        // KUNCI KEAMANAN: Ambil log HANYA milik siswa yang sedang login
+        // Query langsung dengan filter ganda (id_materi + id_siswa) untuk mencegah kebocoran data
+        $this->db->where('id_materi', $id_kjm);
+        $this->db->where('id_siswa', $siswa->id_siswa);
+        $siswa_log = $this->db->get('log_materi')->row();
         
         if ($siswa_log != null && isset($siswa_log->file)) {
             $siswa_log->file = unserialize($siswa_log->file ?? '');
