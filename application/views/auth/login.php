@@ -1,3 +1,6 @@
+<link rel="stylesheet" href="<?= base_url() ?>/assets/plugins/sweetalert2-theme-bootstrap-4/bootstrap-4.min.css">
+<script src="<?= base_url() ?>/assets/plugins/sweetalert2/sweetalert2.min.js"></script>
+
 <div class="container min-h-screen flex items-center justify-center p-4">
     <div class="w-full max-w-sm p-8 rounded-[2rem] bg-white/10 backdrop-blur-sm border border-white/30 shadow-2xl relative z-10">
     <div class="text-center mb-6">
@@ -45,6 +48,13 @@
         </div>
         
     <?= form_close(); ?>
+    
+    <!-- PWA Install Button -->
+    <div id="pwa-install-container" class="mt-6 pt-4 border-t border-white/20 flex flex-col items-center">
+        <button id="pwa-install-btn" class="w-full py-2.5 bg-[#f29e20] hover:bg-[#db8810] text-white font-semibold text-xs rounded-full shadow-lg hover:shadow-xl transition-all duration-200 flex items-center justify-center gap-2 transform hover:-translate-y-0.5">
+            <i class="fas fa-download"></i> Download Aplikasi (Pintasan)
+        </button>
+    </div>
 </div>
 <script src="<?= base_url() ?>/assets/app/js/jquery.backstretch.js"></script>
 <script type="text/javascript">
@@ -130,6 +140,57 @@
             $('#password').attr('type', type);
             // toggle the eye / eye slash icon
             $(this).toggleClass('fa-eye-slash fa-eye');
+        });
+
+        // Register PWA Service Worker
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register(base_url + 'sw.js')
+                .then(function() {
+                    console.log('PWA Service Worker Registered');
+                })
+                .catch(function(err) {
+                    console.error('Service Worker registration failed:', err);
+                });
+        }
+
+        // Handle PWA Install Prompt
+        let deferredPrompt;
+        window.addEventListener('beforeinstallprompt', function(e) {
+            e.preventDefault();
+            deferredPrompt = e;
+        });
+
+        $('#pwa-install-btn').on('click', function(e) {
+            if (deferredPrompt) {
+                deferredPrompt.prompt();
+                deferredPrompt.userChoice.then(function(choiceResult) {
+                    if (choiceResult.outcome === 'accepted') {
+                        console.log('User installed the Pelita LMS shortcut');
+                    }
+                    deferredPrompt = null;
+                });
+            } else {
+                // Check if opened inside standalone PWA mode
+                let isStandalone = window.matchMedia('(display-mode: standalone)').matches || navigator.standalone;
+                if (isStandalone) {
+                    Swal.fire({
+                        title: "Aplikasi Sudah Terbuka",
+                        text: "Anda saat ini sedang membuka Pelita LMS melalui aplikasi pintasan.",
+                        icon: "info",
+                        confirmButtonText: "OK",
+                        confirmButtonColor: "#1c3664"
+                    });
+                } else {
+                    // Opened in browser, but prompt not triggered (already installed or unsupported)
+                    Swal.fire({
+                        title: "Pintasan Mungkin Sudah Terpasang",
+                        html: "Aplikasi Pelita LMS mungkin sudah terpasang di perangkat Anda. Silakan cari ikon <b>Pelita LMS</b> di layar utama ponsel atau daftar menu aplikasi.<br><br>Jika belum ada, Anda dapat menambahkannya secara manual melalui menu browser:<br><b>Klik ikon titik tiga di pojok kanan atas browser -> pilih 'Tambahkan ke Layar Utama' (Add to Home Screen)</b>.",
+                        icon: "info",
+                        confirmButtonText: "Mengerti",
+                        confirmButtonColor: "#1c3664"
+                    });
+                }
+            }
         });
     });
 </script>

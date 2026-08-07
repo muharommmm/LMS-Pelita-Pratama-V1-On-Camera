@@ -8,6 +8,7 @@
 
     <?php $logo_app = $setting->logo_kiri == null ? base_url() . 'assets/img/favicon.png' : base_url() . $setting->logo_kiri; ?>
     <link rel="shortcut icon" href="<?= $logo_app ?>" type="image/x-icon">
+    <link rel="manifest" href="<?= base_url('welcome/manifest') ?>">
 
     <link rel="stylesheet" href="<?= base_url() ?>/assets/plugins/fontawesome-free/css/all.min.css">
     <link rel="stylesheet" href="<?= base_url() ?>/assets/plugins/Ionicons/css/ionicons.min.css">

@@ -1,0 +1,3 @@
+{
+  "info": "Static manifest.json is disabled. The application uses the dynamic manifest route at /welcome/manifest."
+}
