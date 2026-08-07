@@ -181,14 +181,26 @@
                         confirmButtonColor: "#1c3664"
                     });
                 } else {
-                    // Opened in browser, but prompt not triggered (already installed or unsupported)
-                    Swal.fire({
-                        title: "Pintasan Mungkin Sudah Terpasang",
-                        html: "Aplikasi Pelita LMS mungkin sudah terpasang di perangkat Anda. Silakan cari ikon <b>Pelita LMS</b> di layar utama ponsel atau daftar menu aplikasi.<br><br>Jika belum ada, Anda dapat menambahkannya secara manual melalui menu browser:<br><b>Klik ikon titik tiga di pojok kanan atas browser -> pilih 'Tambahkan ke Layar Utama' (Add to Home Screen)</b>.",
-                        icon: "info",
-                        confirmButtonText: "Mengerti",
-                        confirmButtonColor: "#1c3664"
-                    });
+                    // Check if iOS device
+                    let isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+                    if (isIOS) {
+                        Swal.fire({
+                            title: "Panduan Pasang Aplikasi (iOS)",
+                            html: "Browser Safari pada iPhone/iPad membutuhkan pemasangan manual:<br><br>1. Klik tombol <b>Bagikan (Share Icon <i class='fas fa-share-square'></i>)</b> di bagian bawah browser Safari.<br>2. Gulir ke bawah dan pilih menu <b>'Tambahkan ke Layar Utama' (Add to Home Screen)</b>.",
+                            icon: "info",
+                            confirmButtonText: "Mengerti",
+                            confirmButtonColor: "#1c3664"
+                        });
+                    } else {
+                        // Opened in browser, but prompt not triggered (already installed or unsupported)
+                        Swal.fire({
+                            title: "Pasang Pintasan Aplikasi",
+                            html: "Aplikasi Pelita LMS mungkin sudah terpasang di perangkat Anda, atau browser Anda tidak memicu dialog otomatis.<br><br>Jika belum ada di layar HP/PC Anda, silakan tambahkan secara manual:<br><b>Klik menu browser (ikon titik tiga di pojok kanan atas) -> pilih 'Tambahkan ke Layar Utama' (Add to Home Screen)</b>.",
+                            icon: "info",
+                            confirmButtonText: "Mengerti",
+                            confirmButtonColor: "#1c3664"
+                        });
+                    }
                 }
             }
         });
