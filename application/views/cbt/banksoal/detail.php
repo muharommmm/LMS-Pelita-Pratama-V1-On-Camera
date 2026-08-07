@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 /**
  * Created by IntelliJ IDEA.
  * User: multazam
@@ -1750,5 +1750,17 @@
         })
     }
 </script>
+<script>
+    // Fix relative image URLs: prepend base_url to prevent 404s
+    $(document).ready(function() {
+        $('#tabel-konten img').each(function() {
+            var src = $(this).attr('src');
+            if (src && !src.startsWith('http') && !src.startsWith('data:') && !src.startsWith('//')) {
+                $(this).attr('src', base_url + src.replace(/^[\.\/]+/, ''));
+            }
+        });
+    });
+</script>
+
 
 

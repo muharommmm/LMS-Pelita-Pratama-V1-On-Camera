@@ -126,24 +126,25 @@ class Kelasabsensibulanan extends CI_Controller {
         }
 
         // Query log_materi joined with kelas_materi and jadwal_fleksibel for flexible schedule rekap
-        $this->db->select("b.id_siswa, b.log_time, b.finish_time, b.id_materi, b.jam_ke, c.jenis, c.id_mapel, d.id_jadwal");
+        $this->db->select("b.id_siswa, b.log_time, b.finish_time, b.id_materi, b.jam_ke, c.jenis, c.id_mapel, d.id_jadwal, DATE(c.tgl_mulai) as jadwal_materi, TIME_FORMAT(b.log_time, '%H:%i') as jam");
         $this->db->from("kelas_siswa a");
         $this->db->join("log_materi b", "a.id_siswa=b.id_siswa", "inner");
         $this->db->join("kelas_materi c", "b.id_materi=c.id_materi", "inner");
-        $this->db->join("jadwal_fleksibel d", "c.id_mapel=d.mapel_id AND a.id_kelas=d.class_id AND (WEEKDAY(b.log_time) + 1)=d.day", "left");
+        $this->db->join("jadwal_fleksibel d", "c.id_mapel=d.mapel_id AND a.id_kelas=d.class_id AND (WEEKDAY(c.tgl_mulai) + 1)=d.day", "left");
         $this->db->where("a.id_kelas", $id_kelas);
         $this->db->where("c.id_mapel", $id_mapel);
-        $this->db->where("MONTH(b.log_time)", $bulan);
-        $this->db->where("YEAR(b.log_time)", $tahun);
+        $this->db->where("MONTH(c.tgl_mulai)", $bulan);
+        $this->db->where("YEAR(c.tgl_mulai)", $tahun);
         $results = $this->db->get()->result();
         
         $materi_perbulan = [];
         foreach ($results as $row) {
-            $date = date('Y-m-d', strtotime($row->log_time));
+            $date = date('Y-m-d', strtotime($row->jadwal_materi));
             $jenis = $row->jenis; // 1 or 2
             $jam = !empty($row->id_jadwal) ? $row->id_jadwal : '0';
             $materi_perbulan[$row->id_siswa][$jenis][$date][$jam] = $row;
         }
+
 
         // Fetch manual attendance from absensi_siswa
         $absensi_manual = $this->db->select('student_id, date, status')

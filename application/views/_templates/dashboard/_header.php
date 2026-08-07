@@ -98,7 +98,8 @@
     <script type="text/javascript"
             src="<?= base_url() ?>/assets/plugins/DualSelectList/js/bala.DualSelectList.jquery.js"></script>
 
-    <script defer src="<?= base_url() ?>/assets/plugins/katex/contrib/auto-render.min.js" onload="renderMathInElement(document.body);"></script>
+    <script src="<?= base_url() ?>/assets/plugins/katex/katex.min.js"></script>
+    <script defer src="<?= base_url() ?>/assets/plugins/katex/contrib/auto-render.min.js"></script>
     <link rel="stylesheet" type="text/css" href="<?= base_url() ?>/assets/app/css/stylised.css">
     <link rel="stylesheet" href="<?= base_url() ?>/assets/plugins/contextmenu/jquery.contextmenu.css">
     <link rel="stylesheet" type="text/css" href="<?= base_url() ?>/assets/plugins/fields-linker/fieldsLinker.css">

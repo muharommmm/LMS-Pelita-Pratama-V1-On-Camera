@@ -518,29 +518,33 @@
         var items = {};
         for (let i = 0; i < jadwal.kbm_jml_mapel_hari; i++) {
             var jk = i + 1;
-
-            for (let j = 0; j < jadwal.istirahat.length; j++) {
-                var istJamKe = jadwal.istirahat[j].ist;
-                var istDur = jadwal.istirahat[j].dur;
-
-                if (jk == istJamKe) {
-                    dateMulai = new Date(dateMulai.getTime() + istDur * 60000);
-                    items[jk] = dateMulai;//new Date(dateMulai.getTime() + istDur*60000);
-                } else {
-                    dateMulai = new Date(dateMulai.getTime() + perMapel * 60000);
-                    items[jk] = dateMulai;//new Date(dateMulai.getTime() + istDur*60000);
+            var isIstirahat = false;
+            var istDur = 0;
+            if (jadwal.istirahat && jadwal.istirahat.length) {
+                for (let j = 0; j < jadwal.istirahat.length; j++) {
+                    if (jk == jadwal.istirahat[j].ist) {
+                        isIstirahat = true;
+                        istDur = jadwal.istirahat[j].dur;
+                        break;
+                    }
                 }
             }
+
+            if (isIstirahat) {
+                dateMulai = new Date(dateMulai.getTime() + istDur * 60000);
+            } else {
+                dateMulai = new Date(dateMulai.getTime() + perMapel * 60000);
+            }
+            items[jk] = new Date(dateMulai.getTime());
         }
 
         var jamke = value.jam_ke;
-        //console.log('jadwal', items);
+        if (!items[jamke]) return false;
         var tglJadwal = formatDate(items[jamke]);
         var diff = calculateTime(tglJadwal, value.log_time);
         return diff != '';
-        //return diff == '' ? '' : 'Terlambat <br>' + diff;
-        //console.log('jadwal:' + tglJadwal + ' selesai:' + value.selesai.log_time + ' diff:' + calculateTime(tglJadwal, value.selesai.log_time));
     }
+
 
     function calculateTime(jadwal, selesai) {
         var ONE_DAY = 1000 * 60 * 60 * 24;

@@ -8,6 +8,18 @@
 
 ?>
 
+<script src="https://cdn.jsdelivr.net/npm/heic2any@0.0.4/dist/heic2any.min.js"></script>
+<style>
+    @keyframes pulse {
+        0%, 100% { opacity: 0.5; }
+        50% { opacity: 1; }
+    }
+    .heic-loading {
+        animation: pulse 1.5s infinite ease-in-out;
+        background-color: #f1f5f9;
+    }
+</style>
+
 <div class="content-wrapper bg-white pt-4">
     <section class="content-header">
         <div class="container-fluid">
@@ -326,8 +338,19 @@
                     for (let i = 0; i < val.file.length; i++) {
                         var file = val.file[i];
                         var fsrc = file.src.split('.');
-                        var ext = fsrc[fsrc.length - 1];
-                        if (file.type.match('image')) {
+                        var ext = fsrc[fsrc.length - 1].toLowerCase();
+                        var is_heic = (ext === 'heic' || ext === 'heif');
+                        if (is_heic) {
+                            var uniqueId = "heic-guru-" + Math.random().toString(36).substring(2, 9);
+                            html = '<div class="col-3 mb-3">' +
+                                '<img id="' + uniqueId + '" data-enlargeable src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" alt="" class="img-thumbnail heic-loading"></div>';
+                            setTimeout(function(uId, url) {
+                                var imgEl = document.getElementById(uId);
+                                if (imgEl) {
+                                    loadHeicImage(imgEl, url);
+                                }
+                            }, 50, uniqueId, base_url + '/' + file.src);
+                        } else if (file.type.match('image')) {
                             html = '<div class="col-3 mb-3">' +
                                 '<img data-enlargeable src="' + base_url + '/' + file.src + '" alt="" class="img-thumbnail"></div>';
                         } else if (file.type.match('video')) {
@@ -968,6 +991,32 @@
                 name: "Sheet 1"
             }
         });
+    }
+
+    function loadHeicImage(imgElement, srcUrl) {
+        if (typeof heic2any === 'undefined') {
+            console.warn("heic2any library is not loaded");
+            imgElement.src = srcUrl;
+            return;
+        }
+        imgElement.classList.add('heic-loading');
+        fetch(srcUrl)
+            .then(res => {
+                if (!res.ok) throw new Error("Fetch failed");
+                return res.blob();
+            })
+            .then(blob => heic2any({ blob: blob, toType: "image/jpeg", quality: 0.6 }))
+            .then(conversionResult => {
+                var blobResult = Array.isArray(conversionResult) ? conversionResult[0] : conversionResult;
+                var objectUrl = URL.createObjectURL(blobResult);
+                imgElement.src = objectUrl;
+                imgElement.classList.remove('heic-loading');
+            })
+            .catch(err => {
+                console.error("HEIC conversion failed:", err);
+                imgElement.src = base_url + '/assets/app/img/document-icon.svg';
+                imgElement.classList.remove('heic-loading');
+            });
     }
 
 

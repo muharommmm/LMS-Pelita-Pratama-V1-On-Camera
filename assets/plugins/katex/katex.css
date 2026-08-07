@@ -1084,3 +1084,32 @@ body {
   counter-reset: katexEqnNo mmlEqnNo;
 }
 
+/* Auto-align KaTeX formulas left in LMS options and questions */
+.katex-display {
+  display: inline-block !important;
+  margin: 0.2em 0 !important;
+  text-align: left !important;
+}
+.katex-display > .katex {
+  display: inline-block !important;
+  text-align: left !important;
+}
+
+/* Responsive font sizing for KaTeX formulas (Desktop & Mobile) */
+.katex {
+  font-size: 1em !important;
+  vertical-align: middle;
+}
+
+@media (max-width: 768px) {
+  .katex {
+    font-size: 0.9em !important;
+  }
+  .katex-display {
+    max-width: 100%;
+    overflow-x: auto;
+    overflow-y: hidden;
+    vertical-align: middle;
+  }
+}
+

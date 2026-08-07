@@ -143,8 +143,30 @@
             }
         }, 100);
     };
-    initDestroyTimeOutPace();
-
+    function globalRenderMath(elem) {
+        var target = elem || document.body;
+        if (window.katex && typeof renderMathInElement === 'function') {
+            try {
+                renderMathInElement(target, {
+                    delimiters: [
+                        {left: "$$", right: "$$", display: true},
+                        {left: "\\[", right: "\\]", display: true},
+                        {left: "\\(", right: "\\)", display: false},
+                        {left: "$", right: "$", display: false}
+                    ],
+                    throwOnError: false
+                });
+            } catch(e) { console.warn(e); }
+        }
+    }
+    $(document).ready(function() {
+        globalRenderMath();
+        setTimeout(globalRenderMath, 500);
+        setTimeout(globalRenderMath, 1500);
+    });
+    $(document).ajaxComplete(function() {
+        setTimeout(globalRenderMath, 200);
+    });
 </script>
 
 </body>

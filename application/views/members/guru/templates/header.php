@@ -101,7 +101,8 @@
     <script src="<?= base_url() ?>/assets/plugins/jexcel/js/jexcel.js"></script>
     <script src="<?= base_url() ?>/assets/plugins/jexcel/js/jsuites.js"></script>
 
-    <script defer src="<?= base_url() ?>/assets/plugins/katex/contrib/auto-render.min.js" onload="renderMathInElement(document.body);"></script>
+    <script src="<?= base_url() ?>/assets/plugins/katex/katex.min.js"></script>
+    <script defer src="<?= base_url() ?>/assets/plugins/katex/contrib/auto-render.min.js"></script>
 
     <!-- Modern Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">

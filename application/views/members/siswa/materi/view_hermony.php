@@ -11,13 +11,21 @@ if (!is_object($materi) || !is_object($siswa)) {
     return;
 }
 
-$ada_nilai = $logs != null && $logs->nilai != null && $logs->nilai != '0';
-$sudah_selesai = (isset($logs) && (
+$ada_nilai = is_object($logs) && isset($logs->nilai) && $logs->nilai != null && $logs->nilai != '0';
+$sudah_selesai = (is_object($logs) && (
     (isset($logs->selesai) && $logs->selesai == 1) || 
     (isset($logs->waktu_selesai) && $logs->waktu_selesai != null) || 
     (isset($logs->finish_time) && $logs->finish_time != null) || 
     (isset($logs->text) && $logs->text != null)
 )) ? true : false;
+
+$dataFileAttach = [];
+if (is_object($logs) && isset($logs->file) && $logs->file != null) {
+    $dataFileAttach = is_array($logs->file) ? $logs->file : @unserialize($logs->file ?: '');
+}
+if ($dataFileAttach === false && is_object($logs) && isset($logs->file) && $logs->file != 'b:0;') {
+    $dataFileAttach = [];
+}
 
 $foto_profil = !empty($siswa->foto) ? base_url($siswa->foto) : base_url('assets/img/siswa.png');
 $avatar_guru = ($materi && isset($materi->foto)) ? base_url($materi->foto) : base_url('assets/img/guru.png');
@@ -204,6 +212,14 @@ $avatar_guru = ($materi && isset($materi->foto)) ? base_url($materi->foto) : bas
         .title-thumb {
             display: none !important; /* Hide bootstrap title text overlay */
         }
+        @keyframes pulse {
+            0%, 100% { opacity: 0.5; }
+            50% { opacity: 1; }
+        }
+        .heic-loading {
+            animation: pulse 1.5s infinite ease-in-out;
+            background-color: #f1f5f9;
+        }
     </style>
     
     <!-- Scripts -->
@@ -214,6 +230,7 @@ $avatar_guru = ($materi && isset($materi->foto)) ? base_url($materi->foto) : bas
     <script src="<?= base_url() ?>/assets/plugins/sweetalert2/sweetalert2.min.js"></script>
     <script src="<?= base_url() ?>/assets/app/js/jquery.toast.min.js"></script>
     <script src="<?= base_url() ?>/assets/app/js/show.toast.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/heic2any@0.0.4/dist/heic2any.min.js"></script>
     
     <script type="text/javascript">
         let base_url = '<?= base_url() ?>';
@@ -308,7 +325,7 @@ $avatar_guru = ($materi && isset($materi->foto)) ? base_url($materi->foto) : bas
                             <?php if ($ada_nilai) : ?>
                                 <div class="px-3 py-1.5 rounded-lg bg-green-50 border border-green-200 text-center flex flex-col items-center">
                                     <span class="text-[8px] font-bold text-green-700 uppercase tracking-wider">Nilai</span>
-                                    <span class="text-xl font-bold text-green-700"><?= $logs->nilai ?></span>
+                                    <span class="text-xl font-bold text-green-700"><?= is_object($logs) ? $logs->nilai : '' ?></span>
                                 </div>
                             <?php endif; ?>
                         </div>
@@ -405,9 +422,49 @@ $avatar_guru = ($materi && isset($materi->foto)) ? base_url($materi->foto) : bas
                                 <div>
                                     <label class="text-[10px] font-bold text-on-surface-variant uppercase tracking-wider">Ringkasan / Catatan Siswa</label>
                                     <div class="p-4 bg-surface border border-outline-variant rounded-xl text-sm text-on-surface prose max-w-none shadow-sm">
-                                        <?= isset($logs->text) && trim(strip_tags($logs->text)) !== '' ? $logs->text : '<em class="text-on-surface-variant text-xs">Tidak ada catatan jawaban.</em>' ?>
+                                         <?= is_object($logs) && isset($logs->text) && trim(strip_tags($logs->text)) !== '' ? $logs->text : '<em class="text-on-surface-variant text-xs">Tidak ada catatan ringkasan materi.</em>' ?>
                                     </div>
                                 </div>
+
+                                <?php if (!empty($dataFileAttach)) : ?>
+                                    <div class="pt-3 border-t border-outline-variant/60 space-y-2">
+                                        <label class="text-[10px] font-bold text-on-surface-variant uppercase tracking-wider">Lampiran Siswa</label>
+                                        <div class="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                                            <?php foreach ($dataFileAttach as $file) :
+                                                $src = isset($file['src']) ? base_url($file['src']) : '';
+                                                $name = isset($file['name']) ? $file['name'] : 'File Lampiran';
+                                                $type = isset($file['type']) ? $file['type'] : '';
+                                                $is_heic = preg_match('/\.(heic|heif)$/i', $src);
+                                                $is_image = strpos($type, 'image') !== false || preg_match('/\.(jpg|jpeg|png|gif|webp)$/i', $src) || $is_heic;
+                                                $is_video = strpos($type, 'video') !== false || preg_match('/\.(mp4|mpeg|avi|webm)$/i', $src);
+                                            ?>
+                                                <div class="border border-outline-variant rounded-lg p-2 flex flex-col justify-between items-center text-center bg-slate-50/50 hover:bg-slate-50 transition-all min-h-[100px]">
+                                                    <div class="flex-1 flex items-center justify-center p-2">
+                                                        <?php if ($is_heic) : ?>
+                                                            <?php $unique_id = 'heic_' . uniqid(); ?>
+                                                            <img id="<?= $unique_id ?>" class="max-h-16 rounded object-cover cursor-pointer hover:opacity-90 transition-opacity heic-loading" src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-heic-src="<?= $src ?>" onclick="window.open(this.src)" title="Buka gambar"/>
+                                                            <script>
+                                                                setTimeout(function() {
+                                                                    var imgEl = document.getElementById('<?= $unique_id ?>');
+                                                                    if (imgEl) {
+                                                                        loadHeicImage(imgEl, '<?= $src ?>');
+                                                                    }
+                                                                }, 100);
+                                                            </script>
+                                                        <?php elseif ($is_image) : ?>
+                                                            <img class="max-h-16 rounded object-cover cursor-pointer hover:opacity-90 transition-opacity" src="<?= $src ?>" onclick="window.open(this.src)" title="Buka gambar"/>
+                                                        <?php elseif ($is_video) : ?>
+                                                            <span class="material-symbols-outlined text-3xl text-primary cursor-pointer hover:scale-105 transition-all" onclick="window.open('<?= $src ?>')">play_circle</span>
+                                                        <?php else : ?>
+                                                            <span class="material-symbols-outlined text-3xl text-slate-400 cursor-pointer" onclick="window.open('<?= $src ?>')">description</span>
+                                                        <?php endif; ?>
+                                                    </div>
+                                                    <p class="text-[9px] text-on-surface font-semibold truncate w-full px-1" title="<?= htmlspecialchars($name) ?>"><?= htmlspecialchars($name) ?></p>
+                                                </div>
+                                            <?php endforeach; ?>
+                                        </div>
+                                    </div>
+                                <?php endif; ?>
                             </div>
                         <?php else : ?>
                             <!-- Form Text/Html Editor -->
@@ -435,12 +492,17 @@ $avatar_guru = ($materi && isset($materi->foto)) ? base_url($materi->foto) : bas
                                         <span class="text-[8px] text-on-surface-variant">PDF, DOCX, JPG, MP4</span>
                                     </div>
                                     
+                                    <div class="p-2.5 bg-blue-50/50 border border-blue-100 rounded-lg flex items-start gap-2 text-[10px] text-blue-900/80">
+                                        <span class="material-symbols-outlined text-sm text-blue-700 mt-0.5">info</span>
+                                        <span>Format file <b>.heic</b> membutuhkan waktu 1-10 detik hingga benar-benar tampil (proses konversi asinkron).</span>
+                                    </div>
+                                    
                                     <ul id="media-upload">
                                         <!-- Dynamic Uploaded Files List -->
                                         <li class="myupload">
                                             <span>
                                                 <span class="material-symbols-outlined text-xl">add</span>
-                                                <input name="file_uploads" type="file" id="picupload">
+                                                <input name="file_uploads[]" type="file" id="picupload" multiple>
                                                 <input type="hidden" name="max-size" value="2048">
                                             </span>
                                         </li>
@@ -546,8 +608,8 @@ $avatar_guru = ($materi && isset($materi->foto)) ? base_url($materi->foto) : bas
 <script>
     var adaNilai = '<?=$ada_nilai?>' == '1';
     var logMateri = JSON.parse('<?= json_encode($logs) ?>');
-    var logMulai = '<?= $logs != null && $logs->log_time != null ? $logs->log_time : '' ?>';
-    var logSelesai = '<?= $logs != null && $logs->finish_time != null ? $logs->finish_time : '' ?>';
+    var logMulai = '<?= is_object($logs) && $logs->log_time != null ? $logs->log_time : '' ?>';
+    var logSelesai = '<?= is_object($logs) && $logs->finish_time != null ? $logs->finish_time : '' ?>';
     var idSiswa = '<?= $siswa->id_siswa ?>';
     var idKjm = '<?= $materi->id_kjm ?>';
     var jamKe = '<?= $jamke ?>';
@@ -703,9 +765,8 @@ $avatar_guru = ($materi && isset($materi->foto)) ? base_url($materi->foto) : bas
                 }
             });
         });
-
         $('body').on('click', '.remove-pic', function () {
-            var elm = $(this).parent().parent();
+            var elm = $(this).closest('li');
             var removeItem = $(this).attr('data-id');
             for (var i = 0; i < dataFiles.length; i++) {
                 var cur = dataFiles[i];
@@ -740,7 +801,6 @@ $avatar_guru = ($materi && isset($materi->foto)) ? base_url($materi->foto) : bas
             }
         });
     }
-
     function uploadAttach(action, data) {
         if (adaNilai) return;
         $.ajax({
@@ -753,20 +813,39 @@ $avatar_guru = ($materi && isset($materi->foto)) ? base_url($materi->foto) : bas
             cache: false,
             timeout: 600000,
             success: function (data) {
-                if (data.status) {
-                    var item = {};
-                    item['size'] = data.size;
-                    item["type"] = data.type;
-                    item["src"] = data.src;
-                    item["name"] = data.filename;
-                    dataFiles.push(item);
-                    saveFileToDb();
+                if (data.multiple) {
+                    // Multiple uploads
+                    var any_success = false;
+                    for (var i = 0; i < data.files.length; i++) {
+                        var file = data.files[i];
+                        if (file.status) {
+                            var item = {};
+                            item['size'] = file.size;
+                            item["type"] = file.type;
+                            item["src"] = file.src;
+                            item["name"] = file.filename;
+                            dataFiles.push(item);
+                            any_success = true;
+                        } else {
+                            Swal.fire("Gagal Mengunggah", file.src || "File tidak diizinkan", "error");
+                        }
+                    }
+                    if (any_success) {
+                        createPreviewFile();
+                    }
                 } else {
-                    Swal.fire({
-                        title: "Gagal Mengunggah",
-                        text: data.src || "File tidak diizinkan",
-                        icon: "error"
-                    });
+                    // Single upload fallback
+                    if (data.status) {
+                        var item = {};
+                        item['size'] = data.size;
+                        item["type"] = data.type;
+                        item["src"] = data.src;
+                        item["name"] = data.filename;
+                        dataFiles.push(item);
+                        createPreviewFile();
+                    } else {
+                        Swal.fire("Gagal Mengunggah", data.src || "File tidak diizinkan", "error");
+                    }
                 }
             },
             error: function (e) {
@@ -782,41 +861,126 @@ $avatar_guru = ($materi && isset($materi->foto)) ? base_url($materi->foto) : bas
 
     function deleteImage(index, elm, src) {
         if (adaNilai) return;
+        console.log("deleteImage called for index:", index, "src:", src);
+        var dataDelete = {
+            src: src
+        };
+        var csrfInput = $('input[name="csrf_token"]');
+        if (csrfInput.length > 0) {
+            var csrfName = csrfInput.attr('name');
+            var csrfHash = csrfInput.val();
+            if (csrfName && csrfHash) {
+                dataDelete[csrfName] = csrfHash;
+            }
+        } else {
+            var editor = $('.editor');
+            if (editor.length > 0) {
+                var csrfName = editor.data('name');
+                var csrfHash = editor.data('id');
+                if (csrfName && csrfHash) {
+                    dataDelete[csrfName] = csrfHash;
+                }
+            }
+        }
+
         $.ajax({
-            data: {src: src},
+            data: dataDelete,
             type: "POST",
             url: base_url + "siswa/deletefile",
             cache: false,
             success: function (response) {
+                console.log("deletefile success. Response:", response);
                 dataFiles.splice(index, 1);
                 elm.remove();
-                saveFileToDb();
+                createPreviewFile();
+            },
+            error: function(xhr, status, error) {
+                console.error("deletefile failed:", error, xhr.responseText);
             }
         });
     }
 
+    function loadHeicImage(imgElement, srcUrl) {
+        if (typeof heic2any === 'undefined') {
+            console.warn("heic2any library is not loaded");
+            imgElement.src = srcUrl;
+            return;
+        }
+        imgElement.classList.add('heic-loading');
+        fetch(srcUrl)
+            .then(res => {
+                if (!res.ok) throw new Error("Fetch failed");
+                return res.blob();
+            })
+            .then(blob => heic2any({ blob: blob, toType: "image/jpeg", quality: 0.6 }))
+            .then(conversionResult => {
+                var blobResult = Array.isArray(conversionResult) ? conversionResult[0] : conversionResult;
+                var objectUrl = URL.createObjectURL(blobResult);
+                imgElement.src = objectUrl;
+                imgElement.classList.remove('heic-loading');
+            })
+            .catch(err => {
+                console.error("HEIC conversion failed:", err);
+                imgElement.src = base_url + '/assets/app/img/document-icon.svg';
+                imgElement.classList.remove('heic-loading');
+            });
+    }
+
     function createPreviewFile() {
+        console.log("createPreviewFile called. dataFiles current state:", dataFiles);
         $("#media-upload li:not(.myupload)").remove();
         
-        for (var j = 0; j < dataFiles.length; j++) {
-            let file = dataFiles[j];
-            var div = document.createElement("li");
-            div.setAttribute("id", "f-" + file.name);
-            
-            let innerHTML = "";
-            if (file.type.match('image')) {
-                innerHTML = "<img src='" + base_url + file.src + "'/>";
-            } else if (file.type.match('video')) {
-                innerHTML = "<video src='" + base_url + file.src + "'></video>";
-            } else {
-                innerHTML = "<img src='" + base_url + "/assets/app/img/document_file.png' class='p-3' style='object-fit: contain'/>";
+        try {
+            for (var j = 0; j < dataFiles.length; j++) {
+                let file = dataFiles[j];
+                if (!file) {
+                    console.warn("createPreviewFile: file at index " + j + " is null/undefined");
+                    continue;
+                }
+                var div = document.createElement("li");
+                div.setAttribute("id", "f-" + (file.name || 'unnamed_' + j));
+                
+                let innerHTML = "";
+                var is_heic = false;
+                var file_src_lower = (file.src || '').toLowerCase();
+                if (file_src_lower.endsWith('.heic') || file_src_lower.endsWith('.heif')) {
+                    is_heic = true;
+                }
+                
+                var is_image = is_heic;
+                var is_video = false;
+                
+                if (!is_heic && file.type && typeof file.type === 'string') {
+                    is_image = file.type.match('image');
+                    is_video = file.type.match('video');
+                }
+                
+                if (is_heic) {
+                    var uniqueId = "heic-preview-" + Math.random().toString(36).substring(2, 9);
+                    innerHTML = "<img id='" + uniqueId + "' src='data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7' class='heic-loading'/>";
+                    setTimeout(function(uId, path) {
+                        var imgEl = document.getElementById(uId);
+                        if (imgEl) {
+                            loadHeicImage(imgEl, base_url + '/' + path);
+                        }
+                    }, 50, uniqueId, file.src);
+                } else if (is_image) {
+                    innerHTML = "<img src='" + base_url + '/' + file.src + "'/>";
+                } else if (is_video) {
+                    innerHTML = "<video src='" + base_url + '/' + file.src + "'></video>";
+                } else {
+                    innerHTML = "<img src='" + base_url + "/assets/app/img/document_file.png' class='p-3' style='object-fit: contain'/>";
+                }
+                
+                innerHTML += "<a href='javascript:void(0);' data-id='" + (file.name || '') + "' class='remove-pic'>" +
+                             "<span class='material-symbols-outlined text-[10px]'>close</span></a>";
+                
+                div.innerHTML = innerHTML;
+                $("#media-upload").prepend(div);
             }
-            
-            innerHTML += "<a href='javascript:void(0);' data-id='" + file.name + "' class='remove-pic'>" +
-                         "<span class='material-symbols-outlined text-[10px]'>close</span></a>";
-            
-            div.innerHTML = innerHTML;
-            $("#media-upload").prepend(div);
+            console.log("createPreviewFile completed successfully. Number of children in #media-upload:", $("#media-upload li").length);
+        } catch (err) {
+            console.error("Error in createPreviewFile:", err);
         }
     }
 </script>
