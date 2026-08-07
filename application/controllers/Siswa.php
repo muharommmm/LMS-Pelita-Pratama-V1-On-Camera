@@ -426,6 +426,9 @@
 
         // Initialize CodeIgniter Upload Library
         $config["upload_path"] = "./uploads/file_siswa/";
+        if (!is_dir($config["upload_path"])) {
+            mkdir($config["upload_path"], 0777, true);
+        }
         $config["allowed_types"] = "jpg|jpeg|png|gif|heic|heif|mpeg|mpg|mpeg3|mp3|wav|wave|mp4|avi|doc|docx|xls|xlsx|ppt|pptx|csv|pdf|rtf|txt";
         $config["max_size"] = $max_size;
         $config["overwrite"] = FALSE;
