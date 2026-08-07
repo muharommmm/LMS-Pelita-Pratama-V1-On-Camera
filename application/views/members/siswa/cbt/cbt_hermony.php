@@ -14,7 +14,7 @@ $foto_profil = $siswa->foto ? base_url($siswa->foto) : base_url('assets/img/sisw
 <head>
     <meta charset="utf-8"/>
     <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
-    <title><?= $judul ?> - Lumina Learning System</title>
+    <title><?= $judul ?> - Pelita LMS</title>
     <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
